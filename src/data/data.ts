@@ -13,7 +13,7 @@ export interface OnboardingData {
 const data: OnboardingData[] = [
   {
     id: 1,
-    animation: require("../assets/animations/Lottie1.json"),
+    animation: require("../../assets/animations/Lottie1.json"),
     title: "Encontre quem faz na sua quebrada!",
     titleColor: "#3B2C00",
     text: "Aqui você descobre profissionais da sua área, gente que trabalha duro e tá pronta pra somar com você.",
@@ -22,7 +22,7 @@ const data: OnboardingData[] = [
   },
   {
     id: 2,
-    animation: require("../assets/animations/Lottie2.json"),
+    animation: require("../../assets/animations/Lottie2.json"),
     title: "Contrate com segurança",
     titleColor: "#3A2B28",
     text: "Avaliações e perfis ajudam você a fazer a escolha certa com confiança.",
@@ -31,7 +31,7 @@ const data: OnboardingData[] = [
   },
   {
     id: 3,
-    animation: require("../assets/animations/Lottie3.json"),
+    animation: require("../../assets/animations/Lottie3.json"),
     title: "Fortaleça o corre de quem é da base!",
     titleColor: "#4B2E2B",
     text: "Dê moral pra quem rala todo dia. Sua escolha movimenta a economia da quebrada.",
