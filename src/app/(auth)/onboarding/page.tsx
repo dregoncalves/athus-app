@@ -1,7 +1,7 @@
 import CustomButton from "@/components/onboarding/CustomButton";
 import Pagination from "@/components/onboarding/Pagination";
 import RenderItem from "@/components/onboarding/RenderItem";
-import data, { OnboardingData } from "@/data/data";
+import data, { OnboardingData } from "@/src/data/data";
 import React from "react";
 import { FlatList, StyleSheet, View, ViewToken } from "react-native";
 import Animated, {

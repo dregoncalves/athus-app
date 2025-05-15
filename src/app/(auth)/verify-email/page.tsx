@@ -12,7 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 
 export default function VerifyEmailPage() {
   const [code, setCode] = useState("");
-  const { email } = useLocalSearchParams(); // recebe o email via rota
+  const { email } = useLocalSearchParams();
 
   const handleVerify = async () => {
     if (!code || !email) {

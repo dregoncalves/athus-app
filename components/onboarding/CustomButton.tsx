@@ -13,7 +13,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { OnboardingData } from "@/data/data";
+import { OnboardingData } from "@/src/data/data";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

@@ -1,4 +1,4 @@
-import { OnboardingData } from "@/data/data";
+import { OnboardingData } from "@/src/data/data";
 import LottieView from "lottie-react-native";
 import React from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
