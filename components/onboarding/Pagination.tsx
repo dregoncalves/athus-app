@@ -2,7 +2,7 @@ import {StyleSheet, View} from 'react-native';
 import React from 'react';
 import {SharedValue} from 'react-native-reanimated';
 import Dot from './Dot';
-import { OnboardingData } from '@/data/data';
+import { OnboardingData } from '@/src/data/data';
 
 type Props = {
   data: OnboardingData[];

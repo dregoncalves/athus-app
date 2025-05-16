@@ -12,7 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 
 export default function VerifyEmailPage() {
   const [code, setCode] = useState("");
-  const { email } = useLocalSearchParams(); // recebe o email via rota
+  const { email } = useLocalSearchParams();
 
   const handleVerify = async () => {
     if (!code || !email) {
@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
     try {
       await verifyEmail(String(email), code);
       Alert.alert("Sucesso", "E-mail verificado com sucesso!");
-      router.replace("/(panel)/profile/page");
+      router.replace("/(private)/profile/page");
     } catch (error) {
       Alert.alert("Erro", "Código inválido ou expirado.");
       console.error(error);

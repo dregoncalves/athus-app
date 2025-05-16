@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const storeToken = async (token: string) => {
