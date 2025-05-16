@@ -28,7 +28,7 @@ export default function Index() {
   return (
     <Redirect
       href={
-        hasSeenOnboarding ? "/(auth)/login/page" : "/(auth)/onboarding/page"
+        hasSeenOnboarding ? "/(auth)/onboarding/page" : "/(auth)/onboarding/page"
       }
     />
   );

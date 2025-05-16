@@ -26,12 +26,15 @@ export default function LoginPage() {
     try {
       const data = await login(email, password);
       console.log("Resposta da API:", data);
-      const token = data.body?.accessToken;
-      if (!token) throw new Error("Token não retornado");
 
-      await AsyncStorage.setItem("authToken", token);
+      const { accessToken, refreshToken } = data.body;
+      if (!accessToken || !refreshToken) throw new Error("Tokens ausentes");
+
+      await AsyncStorage.setItem("authToken", accessToken);
+      await AsyncStorage.setItem("refreshToken", refreshToken);
+
       Alert.alert("Sucesso", "Login realizado!");
-      router.replace("/(panel)/profile/page");
+      router.replace("/(private)/profile/page");
     } catch (error) {
       Alert.alert("Erro", "Falha no login. Verifique suas credenciais.");
       console.error(error);
