@@ -12,7 +12,7 @@ export default function ServicosScreen() {
     <View style={styles.container}>
       {/* Header com botão de login */}
       <View style={styles.header}>
-  <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
+  <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/(auth)/login/page')}>
     <Text style={styles.loginText}>LOGIN</Text>
     <Ionicons name="person-circle-outline" size={28} color="#888" />
   </TouchableOpacity>
@@ -41,7 +41,7 @@ export default function ServicosScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
         {profissionais.map((nome, index) => (
           index === 0 ? (
-            <TouchableOpacity key={index} style={styles.profissional} onPress={() => router.push('/colaborador')}>
+            <TouchableOpacity key={index} style={styles.profissional} onPress={() => router.push('/(private)/colaborador/page')}>
               <Ionicons name="person-outline" size={24} />
               <Text style={styles.profissionalNome}>{nome}</Text>
             </TouchableOpacity>
