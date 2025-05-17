@@ -19,6 +19,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
+import { SocialLoginButtons } from '@/components/SocialLoginButtons';
 
 // Função simples para validar e-mail
 function isValidEmail(email: string): boolean {
@@ -70,7 +71,10 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.logoContainer}>
             <Image
               source={require('../../assets/images/logo.png')}
@@ -85,7 +89,6 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.formContainer}>
-            <Text style={styles.title}>Login</Text>
             <Text style={styles.subtitle}>
               Acesse sua conta para encontrar serviços
             </Text>
@@ -135,7 +138,9 @@ export default function LoginScreen() {
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
                   accessibilityRole="button"
-                  accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  accessibilityLabel={
+                    showPassword ? 'Ocultar senha' : 'Mostrar senha'
+                  }
                 >
                   {showPassword ? (
                     <EyeOff size={20} color={colors.textLight} />
@@ -147,11 +152,20 @@ export default function LoginScreen() {
             </View>
 
             <Link href="/auth/forgot-password" asChild>
-              <TouchableOpacity style={styles.forgotPasswordButton} accessibilityRole="button">
+              <TouchableOpacity
+                style={styles.forgotPasswordButton}
+                accessibilityRole="button"
+              >
                 <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
               </TouchableOpacity>
             </Link>
 
+            <SocialLoginButtons
+              onGooglePress={() => {}}
+              onFacebookPress={() => {}}
+              loadingGoogle={false}
+              loadingFacebook={false}
+            />
             <Button
               title="Entrar"
               onPress={handleLogin}
@@ -185,21 +199,15 @@ const styles = StyleSheet.create({
   logo: { width: 150, height: 50, marginBottom: 12 },
   tagline: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 14,
+    fontSize: 12,
     color: colors.textLight,
   },
   formContainer: { flex: 1 },
-  title: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 28,
-    color: colors.textDark,
-    marginBottom: 8,
-  },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
-    marginBottom: 32,
+    marginBottom: 22,
   },
   inputContainer: { marginBottom: 20 },
   inputLabel: {

@@ -39,11 +39,11 @@ export default function RegisterScreen() {
   const confirmPasswordRef = useRef<TextInput>(null);
 
   function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
 
   const handleRegister = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
+  if (!fullName || !email || !password || !confirmPassword) {
     Toast.show({ type: 'error', text1: 'Preencha todos os campos' });
     return;
   }
@@ -51,25 +51,34 @@ export default function RegisterScreen() {
     Toast.show({ type: 'error', text1: 'Digite um e-mail válido' });
     return;
   }
-    setLoading(true);
-    try {
-      await signUp(fullName, email, password);
+  setLoading(true);
+  try {
+    await signUp(fullName, email, password);
+    Toast.show({
+      type: 'success',
+      text1: 'Cadastro realizado!',
+      text2: 'Verifique seu e-mail para confirmar.',
+    });
+    router.push({ pathname: '/auth/verify-email', params: { email } });
+  } catch (error: any) {
+    if (error?.response?.status === 409) {
       Toast.show({
-        type: 'success',
-        text1: 'Cadastro realizado!',
-        text2: 'Verifique seu e-mail para confirmar.',
+        type: 'error',
+        text1: 'Conta já existe',
+        text2: 'Este e-mail já está cadastrado.',
       });
-      router.push({ pathname: '/auth/verify-email', params: { email } });
-    } catch (error) {
+    } else {
       Toast.show({
         type: 'error',
         text1: 'Erro ao cadastrar',
         text2: 'Tente novamente mais tarde.',
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,7 +86,8 @@ export default function RegisterScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        {/* HEADER FIXO */}
+        <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
@@ -86,7 +96,6 @@ export default function RegisterScreen() {
           >
             <ArrowLeft size={24} color={colors.textDark} />
           </TouchableOpacity>
-
           <View style={styles.logoContainer}>
             <Image
               source={require('../../assets/images/logo.png')}
@@ -96,11 +105,17 @@ export default function RegisterScreen() {
               accessibilityLabel="Logo Athus"
             />
           </View>
+        </View>
 
+        {/* FORMULÁRIO ROLÁVEL */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.formContainer}>
-            <Text style={styles.title}>Cadastro</Text>
             <Text style={styles.subtitle}>
-              Crie sua conta para descobrir talentos locais
+              Crie sua conta para descobrir talentos na sua quebrada!
             </Text>
 
             <View style={styles.inputContainer}>
@@ -160,7 +175,9 @@ export default function RegisterScreen() {
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
                   accessibilityRole="button"
-                  accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  accessibilityLabel={
+                    showPassword ? 'Ocultar senha' : 'Mostrar senha'
+                  }
                 >
                   {showPassword ? (
                     <EyeOff size={20} color={colors.textLight} />
@@ -189,11 +206,11 @@ export default function RegisterScreen() {
                 />
                 <TouchableOpacity
                   style={styles.eyeIcon}
-                  onPress={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   accessibilityRole="button"
-                  accessibilityLabel={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                  accessibilityLabel={
+                    showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'
+                  }
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={20} color={colors.textLight} />
@@ -208,7 +225,9 @@ export default function RegisterScreen() {
               title="Cadastrar"
               onPress={handleRegister}
               loading={loading}
-              disabled={loading || !fullName || !email || !password || !confirmPassword}
+              disabled={
+                loading || !fullName || !email || !password || !confirmPassword
+              }
               style={styles.registerButton}
               accessibilityLabel="Botão de cadastro"
               testID="register-btn"
@@ -232,29 +251,87 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   keyboardAvoidingView: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
-  backButton: { marginTop: 16, marginBottom: 16, alignSelf: 'flex-start' },
-  logoContainer: { alignItems: 'center', marginBottom: 32 },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: colors.background,
+    zIndex: 2,
+    // opcional: borderBottomWidth: 1, borderBottomColor: colors.lightGray
+  },
+  backButton: { alignSelf: 'flex-start' },
+  logoContainer: { alignItems: 'center', marginBottom: 8, marginTop: 8 },
   logo: { width: 120, height: 40 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    justifyContent: 'center',
+  },
   formContainer: { flex: 1 },
-  title: { fontFamily: 'Poppins-Bold', fontSize: 28, color: colors.textDark, marginBottom: 8 },
-  subtitle: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textLight, marginBottom: 24 },
+  title: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 28,
+    color: colors.textDark,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 24,
+  },
   inputContainer: { marginBottom: 16 },
-  inputLabel: { fontFamily: 'Poppins-Medium', fontSize: 14, color: colors.textDark, marginBottom: 8 },
+  inputLabel: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 14,
+    color: colors.textDark,
+    marginBottom: 8,
+  },
   input: {
-    height: 50, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.lightGray,
-    borderRadius: 8, paddingHorizontal: 16, fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textDark,
+    height: 50,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textDark,
   },
   passwordContainer: {
-    flexDirection: 'row', height: 50, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.lightGray,
-    borderRadius: 8, alignItems: 'center',
+    flexDirection: 'row',
+    height: 50,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   passwordInput: {
-    flex: 1, height: '100%', paddingHorizontal: 16, fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textDark,
+    flex: 1,
+    height: '100%',
+    paddingHorizontal: 16,
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textDark,
   },
   eyeIcon: { padding: 12 },
   registerButton: { marginTop: 8, marginBottom: 24 },
-  loginContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 8 },
-  loginText: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textLight, marginRight: 4 },
-  loginLink: { fontFamily: 'Poppins-Medium', fontSize: 14, color: colors.secondary },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  loginText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textLight,
+    marginRight: 4,
+  },
+  loginLink: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 14,
+    color: colors.secondary,
+  },
 });
