@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 export default function ColaboradorScreen() {
   return (
     <View style={styles.container}>
-      <Image source={require('../../assets/images/icon.png')} style={styles.avatar} />
+      {/* <Image source={require('../../assets/images/icon.png')} style={styles.avatar} /> */}
 
       <Text style={styles.nome}>ROBERTO C. DE OLIVEIRA</Text>
 
