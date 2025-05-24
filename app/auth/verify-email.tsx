@@ -31,7 +31,10 @@ export default function VerifyEmailScreen() {
   const router = useRouter();
   const { verifyEmail, login } = useAuth();
 
-  const { email, senha } = useLocalSearchParams<{ email: string, senha: string }>();
+  const { email, senha } = useLocalSearchParams<{
+    email: string;
+    senha: string;
+  }>();
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -46,11 +49,31 @@ export default function VerifyEmailScreen() {
   const triggerShake = () => {
     shakeAnim.setValue(0);
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 1, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -1, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 1, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -1, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, {
+        toValue: 1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
@@ -96,7 +119,9 @@ export default function VerifyEmailScreen() {
     setLoading(true);
     setError('');
     try {
-      await verifyEmail(email, codigo);
+      console.log('Enviando:', email, codigo);
+      const resposta = await verifyEmail(email, codigo);
+      console.log('RESPOSTA DA API:', resposta); // <-- Veja exatamente o que vem!
       Toast.show({
         type: 'success',
         text1: 'E-mail verificado com sucesso!',
@@ -109,6 +134,10 @@ export default function VerifyEmailScreen() {
         type: 'error',
         text1: 'Código inválido ou expirado.',
       });
+      console.log(
+        'Erro ao verificar e-mail:',
+        err?.response?.data || err.message
+      );
       triggerShake();
     } finally {
       setLoading(false);
@@ -186,14 +215,12 @@ export default function VerifyEmailScreen() {
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <Button
-            title={loading ? "Verificando..." : "Verificar"}
+            title={loading ? 'Verificando...' : 'Verificar'}
             onPress={handleVerify}
             loading={loading}
             style={styles.verifyButton}
             disabled={
-              loading ||
-              code.some((c) => !c) ||
-              code.join('').length !== 6
+              loading || code.some((c) => !c) || code.join('').length !== 6
             }
             accessibilityLabel="Botão para verificar o código"
           />
@@ -203,7 +230,11 @@ export default function VerifyEmailScreen() {
             {timer > 0 ? (
               <Text style={styles.timerText}>Reenviar em {timer}s</Text>
             ) : (
-              <TouchableOpacity onPress={handleResendCode} accessibilityRole="button" accessibilityLabel="Reenviar código">
+              <TouchableOpacity
+                onPress={handleResendCode}
+                accessibilityRole="button"
+                accessibilityLabel="Reenviar código"
+              >
                 <Text style={styles.resendLink}>Reenviar código</Text>
               </TouchableOpacity>
             )}
@@ -217,9 +248,27 @@ export default function VerifyEmailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   keyboardAvoidingView: { flex: 1, paddingHorizontal: 14 },
-  content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 },
-  title: { fontFamily: 'Poppins-Bold', fontSize: 28, color: colors.textDark, marginBottom: 16, textAlign: 'center' },
-  subtitle: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textLight, marginBottom: 8, textAlign: 'center', lineHeight: 20 },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 100,
+  },
+  title: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 28,
+    color: colors.textDark,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 8,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
   emailText: { fontFamily: 'Poppins-Medium', color: colors.primary },
   infoText: {
     fontFamily: 'Poppins-Regular',
@@ -272,8 +321,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   verifyButton: { width: '100%', marginBottom: 20 },
-  resendContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 12 },
-  resendText: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textLight, marginRight: 4 },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  resendText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textLight,
+    marginRight: 4,
+  },
   resendLink: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,

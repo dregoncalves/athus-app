@@ -1,12 +1,9 @@
+// /context/AuthContext.tsx
 import React, { createContext, useEffect, useState, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import * as AuthService from "../services/authService";
-
-type User = {
-  nome: string;
-  email: string;
-};
+import { User } from "@/types/User"; // Use o caminho relativo se necessário, ex: ../types/User
 
 interface AuthContextData {
   user: User | null;
@@ -45,11 +42,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Login
   const login = async (email: string, senha: string) => {
     const data = await AuthService.login(email, senha);
-    const { accessToken, refreshToken, nome } = data.body;
-    const user = { nome, email };
+
+    // Aqui o backend deve retornar TODOS os campos do User!
+    const user: User = {
+      id: data.body.id,
+      nome: data.body.nome,
+      email: data.body.email,
+      telefone: data.body.telefone,
+      cpf: data.body.cpf,
+      dataNascimento: data.body.dataNascimento,
+      pais: data.body.pais,
+      estado: data.body.estado,
+      cidade: data.body.cidade,
+      cep: data.body.cep,
+      rua: data.body.rua,
+      numero: data.body.numero,
+      apartamento: data.body.apartamento,
+      logradouro: data.body.logradouro,
+      imagemPerfil: data.body.imagemPerfil,
+      ativo: data.body.ativo,
+      prestadorServico: data.body.prestadorServico,
+    };
     setUser(user);
-    await AsyncStorage.setItem("authToken", accessToken);
-    await AsyncStorage.setItem("refreshToken", refreshToken);
+    await AsyncStorage.setItem("authToken", data.body.accessToken);
+    await AsyncStorage.setItem("refreshToken", data.body.refreshToken);
     await AsyncStorage.setItem("user", JSON.stringify(user));
     router.replace("/(tabs)");
   };
