@@ -1,3 +1,4 @@
+// app/auth/register.tsx
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import {
@@ -22,6 +23,7 @@ import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
 import { GoogleSignin, User } from '@react-native-google-signin/google-signin';
 import { loginWithGoogle } from '@/services/authService';
+import { SignUpPayload } from "@/types/SignUpPayload";
 
 GoogleSignin.configure({
   webClientId: "302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com",
@@ -108,11 +110,13 @@ export default function RegisterScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await signUp({
+      const payload: SignUpPayload = {
         nomeCompleto: fullName,
         email,
         senha: password,
-      });
+      };
+      await signUp(payload);
+
       Toast.show({
         type: 'success',
         text1: 'Cadastro realizado!',
