@@ -10,15 +10,48 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter } from 'expo-router';
+import { Link, router, useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Button } from '@/components/Button';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
+import { GoogleSignin, User } from '@react-native-google-signin/google-signin';
+import { loginWithGoogle } from '@/services/authService';
+
+GoogleSignin.configure({
+  webClientId: "302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com",
+  offlineAccess: true,
+});
+
+async function handleGoogleRegister() {
+  try {
+    await GoogleSignin.hasPlayServices();
+    await GoogleSignin.signIn();
+    const userInfo = await GoogleSignin.signIn();
+    const { accessToken } = await GoogleSignin.getTokens();
+    console.log('USER:', userInfo);
+    console.log('TOKENS:', accessToken);
+
+    if (!accessToken) throw new Error("Não foi possível obter o accessToken do Google.");
+
+    await loginWithGoogle(accessToken);
+
+    Toast.show({ type: "success", text1: "Cadastro e login realizados com Google!" });
+    router.replace("/(tabs)");
+  } catch (error) {
+    console.error(error);
+    Toast.show({
+      type: "error",
+      text1: "Erro ao cadastrar com Google",
+      text2: "Tente novamente ou use outro método.",
+    });
+  }
+}
 
 export default function RegisterScreen() {
   usePublicRoute();
@@ -30,6 +63,13 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Input focus/erro helpers
+  const [focusedField, setFocusedField] = useState('');
+  const [errors, setErrors] = useState<{ [k: string]: string }>({});
+  const [eyeAnim] = useState(new Animated.Value(1));
+  const [eyeAnim2] = useState(new Animated.Value(1));
+
   const router = useRouter();
   const { signUp } = useAuth();
 
@@ -42,86 +82,99 @@ export default function RegisterScreen() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  const handleRegister = async () => {
-  if (!fullName || !email || !password || !confirmPassword) {
-    Toast.show({ type: 'error', text1: 'Preencha todos os campos' });
-    return;
+  // Validação
+  function validate() {
+    const errs: { [k: string]: string } = {};
+    if (!fullName) errs.fullName = 'Digite seu nome completo.';
+    if (!email) errs.email = 'Digite seu e-mail.';
+    else if (!isValidEmail(email)) errs.email = 'E-mail inválido.';
+    if (!password) errs.password = 'Digite sua senha.';
+    else if (password.length < 6) errs.password = 'Mínimo 6 caracteres.';
+    if (!confirmPassword) errs.confirmPassword = 'Confirme sua senha.';
+    else if (password !== confirmPassword) errs.confirmPassword = 'Senhas não conferem.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   }
-  if (!isValidEmail(email)) {
-    Toast.show({ type: 'error', text1: 'Digite um e-mail válido' });
-    return;
-  }
-  setLoading(true);
-  try {
-    await signUp(fullName, email, password);
-    Toast.show({
-      type: 'success',
-      text1: 'Cadastro realizado!',
-      text2: 'Verifique seu e-mail para confirmar.',
-    });
-    router.push({ pathname: '/auth/verify-email', params: { email } });
-  } catch (error: any) {
-    if (error?.response?.status === 409) {
-      Toast.show({
-        type: 'error',
-        text1: 'Conta já existe',
-        text2: 'Este e-mail já está cadastrado.',
-      });
-    } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao cadastrar',
-        text2: 'Tente novamente mais tarde.',
-      });
-    }
-  } finally {
-    setLoading(false);
-  }
-};
 
+  // Animação de bounce no botão olho
+  function animateEye(eye: Animated.Value) {
+    Animated.sequence([
+      Animated.timing(eye, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+      Animated.timing(eye, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+  }
+
+  const handleRegister = async () => {
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      await signUp({
+        nomeCompleto: fullName,
+        email,
+        senha: password,
+      });
+      Toast.show({
+        type: 'success',
+        text1: 'Cadastro realizado!',
+        text2: 'Verifique seu e-mail para confirmar.',
+      });
+      router.push({ pathname: '/auth/verify-email', params: { email, senha: password } });
+    } catch (error: any) {
+      if (error?.response?.status === 409) {
+        Toast.show({
+          type: 'error',
+          text1: 'Conta já existe',
+          text2: 'Este e-mail já está cadastrado.',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao cadastrar',
+          text2: 'Tente novamente mais tarde.',
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.headerAbsolute}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+        >
+          <ArrowLeft size={24} color={colors.textDark} />
+        </TouchableOpacity>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
-        {/* HEADER FIXO */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar"
-          >
-            <ArrowLeft size={24} color={colors.textDark} />
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-              accessible
-              accessibilityLabel="Logo Athus"
-            />
-          </View>
-        </View>
-
-        {/* FORMULÁRIO ROLÁVEL */}
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.formContainer}>
+          <View style={styles.formWrapper}>
+            <Text style={styles.title}>Criar conta</Text>
             <Text style={styles.subtitle}>
               Crie sua conta para descobrir talentos na sua quebrada!
             </Text>
 
+            {/* Nome completo */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Nome completo</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  errors.fullName ? styles.inputError : null,
+                  focusedField === 'fullName' ? styles.inputFocused : null,
+                ]}
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Digite seu nome completo"
@@ -132,14 +185,22 @@ export default function RegisterScreen() {
                 blurOnSubmit={false}
                 textContentType="name"
                 accessibilityLabel="Nome completo"
+                onFocus={() => setFocusedField('fullName')}
+                onBlur={() => setFocusedField('')}
               />
+              {errors.fullName && <Text style={styles.errorMsg}>{errors.fullName}</Text>}
             </View>
 
+            {/* E-mail */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>E-mail</Text>
               <TextInput
                 ref={emailRef}
-                style={styles.input}
+                style={[
+                  styles.input,
+                  errors.email ? styles.inputError : null,
+                  focusedField === 'email' ? styles.inputFocused : null,
+                ]}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Digite seu e-mail"
@@ -151,12 +212,20 @@ export default function RegisterScreen() {
                 blurOnSubmit={false}
                 textContentType="username"
                 accessibilityLabel="E-mail"
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField('')}
               />
+              {errors.email && <Text style={styles.errorMsg}>{errors.email}</Text>}
             </View>
 
+            {/* Senha */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Senha</Text>
-              <View style={styles.passwordContainer}>
+              <View style={[
+                styles.passwordContainer,
+                errors.password ? styles.inputError : null,
+                focusedField === 'password' ? styles.inputFocused : null,
+              ]}>
                 <TextInput
                   ref={passwordRef}
                   style={styles.passwordInput}
@@ -170,27 +239,45 @@ export default function RegisterScreen() {
                   blurOnSubmit={false}
                   textContentType="newPassword"
                   accessibilityLabel="Senha"
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField('')}
                 />
                 <TouchableOpacity
                   style={styles.eyeIcon}
-                  onPress={() => setShowPassword(!showPassword)}
+                  onPress={() => {
+                    setShowPassword(!showPassword);
+                    animateEye(eyeAnim);
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel={
                     showPassword ? 'Ocultar senha' : 'Mostrar senha'
                   }
+                  activeOpacity={0.8}
                 >
-                  {showPassword ? (
-                    <EyeOff size={20} color={colors.textLight} />
-                  ) : (
-                    <Eye size={20} color={colors.textLight} />
-                  )}
+                  <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
+                    {showPassword ? (
+                      <EyeOff size={20} color={colors.textLight} />
+                    ) : (
+                      <Eye size={20} color={colors.textLight} />
+                    )}
+                  </Animated.View>
                 </TouchableOpacity>
               </View>
+              {/* Dica de senha */}
+              <Text style={styles.passwordTip}>
+                Use pelo menos 6 caracteres. Combine letras e números para mais segurança.
+              </Text>
+              {errors.password && <Text style={styles.errorMsg}>{errors.password}</Text>}
             </View>
 
+            {/* Confirmar senha */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Confirmar senha</Text>
-              <View style={styles.passwordContainer}>
+              <View style={[
+                styles.passwordContainer,
+                errors.confirmPassword ? styles.inputError : null,
+                focusedField === 'confirmPassword' ? styles.inputFocused : null,
+              ]}>
                 <TextInput
                   ref={confirmPasswordRef}
                   style={styles.passwordInput}
@@ -203,26 +290,36 @@ export default function RegisterScreen() {
                   onSubmitEditing={handleRegister}
                   textContentType="newPassword"
                   accessibilityLabel="Confirmar senha"
+                  onFocus={() => setFocusedField('confirmPassword')}
+                  onBlur={() => setFocusedField('')}
                 />
                 <TouchableOpacity
                   style={styles.eyeIcon}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onPress={() => {
+                    setShowConfirmPassword(!showConfirmPassword);
+                    animateEye(eyeAnim2);
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel={
                     showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'
                   }
+                  activeOpacity={0.8}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} color={colors.textLight} />
-                  ) : (
-                    <Eye size={20} color={colors.textLight} />
-                  )}
+                  <Animated.View style={{ transform: [{ scale: eyeAnim2 }] }}>
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} color={colors.textLight} />
+                    ) : (
+                      <Eye size={20} color={colors.textLight} />
+                    )}
+                  </Animated.View>
                 </TouchableOpacity>
               </View>
+              {errors.confirmPassword && <Text style={styles.errorMsg}>{errors.confirmPassword}</Text>}
             </View>
 
+            {/* Botão de cadastro */}
             <Button
-              title="Cadastrar"
+              title={loading ? "Cadastrando..." : "Cadastrar"}
               onPress={handleRegister}
               loading={loading}
               disabled={
@@ -233,6 +330,26 @@ export default function RegisterScreen() {
               testID="register-btn"
             />
 
+            {/* Alternativa: Google */}
+            <View style={styles.orContainer}>
+              <View style={styles.line} />
+              <Text style={styles.orText}>Ou cadastre-se com</Text>
+              <View style={styles.line} />
+            </View>
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={handleGoogleRegister}
+              activeOpacity={0.7}
+              accessibilityLabel="Cadastrar com Google"
+            >
+              <Image
+                source={require('../../assets/images/google-logo.png')}
+                style={styles.googleIcon}
+              />
+              <Text style={styles.googleText}>Google</Text>
+            </TouchableOpacity>
+
+            {/* Link para login */}
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Já tem uma conta?</Text>
               <Link href="/auth/login" asChild>
@@ -251,35 +368,49 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   keyboardAvoidingView: { flex: 1 },
-  header: {
+  headerAbsolute: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    zIndex: 10,
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: Platform.OS === 'android' ? 36 : 16,
     paddingBottom: 8,
     backgroundColor: colors.background,
-    zIndex: 2,
-    // opcional: borderBottomWidth: 1, borderBottomColor: colors.lightGray
+    // Optional: Adicione sombra se quiser destacar o topo
+    // shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }
   },
   backButton: { alignSelf: 'flex-start' },
-  logoContainer: { alignItems: 'center', marginBottom: 8, marginTop: 8 },
-  logo: { width: 120, height: 40 },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
     justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 4,
   },
-  formContainer: { flex: 1 },
+  formWrapper: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 2,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
+    marginTop: 12,
+    marginBottom: 24,
+  },
   title: {
     fontFamily: 'Poppins-Bold',
-    fontSize: 28,
+    fontSize: 26,
     color: colors.textDark,
-    marginBottom: 8,
+    marginBottom: 2,
+    textAlign: 'center'
   },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
-    marginBottom: 24,
+    marginBottom: 8,
+    textAlign: 'center'
   },
   inputContainer: { marginBottom: 16 },
   inputLabel: {
@@ -299,6 +430,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textDark,
   },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: '#F0F6FF',
+  },
+  inputError: {
+    borderColor: colors.danger || '#c00',
+  },
+  errorMsg: {
+    color: colors.danger || '#c00',
+    fontSize: 13,
+    marginTop: 2,
+    marginLeft: 2,
+  },
   passwordContainer: {
     flexDirection: 'row',
     height: 50,
@@ -317,7 +461,47 @@ const styles = StyleSheet.create({
     color: colors.textDark,
   },
   eyeIcon: { padding: 12 },
-  registerButton: { marginTop: 8, marginBottom: 24 },
+  passwordTip: {
+    fontSize: 12,
+    color: colors.textLight,
+    marginTop: 4,
+    marginLeft: 2,
+  },
+  registerButton: { marginTop: 8, marginBottom: 22 },
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 6,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.lightGray,
+    marginHorizontal: 6,
+  },
+  orText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 13,
+    color: colors.textLight,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    paddingVertical: 10,
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  googleIcon: { width: 22, height: 22, marginRight: 10 },
+  googleText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 15,
+    color: colors.textDark,
+  },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

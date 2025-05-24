@@ -7,6 +7,7 @@ import { User, MapPin, Settings, CircleHelp as HelpCircle, LogOut } from 'lucide
 import { ProfileMenuItem } from '@/components/ProfileMenuItem';
 import { AuthContext } from '@/context/AuthContext';
 import api from '@/services/api';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 async function getUser(id: string) {
   const response = await api.get(`/usuarios/${id}`);
@@ -35,7 +36,8 @@ export default function ProfileScreen() {
     fetchProfile();
   }, [user?.id]);
 
-  const handleLogout = () => {
+  async function handleLogout() {
+    await GoogleSignin.signOut();
     Alert.alert(
       "Sair",
       "Deseja realmente sair da sua conta?",

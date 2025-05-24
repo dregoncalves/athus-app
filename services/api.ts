@@ -1,21 +1,24 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { logout } from "./authService";
 
 const api = axios.create({
   baseURL: "http://felipemariano.com.br:8080/ProjetoAthus",
 });
 
-// Adiciona token em todas as rotas, exceto /auth/*
+// Adiciona token (exceto para rotas de autenticação)
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem("authToken");
-  if (token && !config.url?.includes("/auth/")) {
+  const url = config.url || '';
+  // Considera qualquer rota que tenha "/auth" (no início ou meio)
+  if (token && !/\/?auth\//.test(url)) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
-// Interceptor de resposta para lidar com refresh automático
+// Refresh automático de token
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -27,26 +30,24 @@ api.interceptors.response.use(
       !originalRequest.url.includes("/auth/refresh")
     ) {
       originalRequest._retry = true;
-
       try {
         const refreshToken = await AsyncStorage.getItem("refreshToken");
         if (!refreshToken) throw new Error("Refresh token ausente");
 
         const res = await api.post("/auth/refresh", { refreshToken });
-
         const { accessToken, refreshToken: newRefresh } = res.data.body;
+
         await AsyncStorage.setItem("authToken", accessToken);
         await AsyncStorage.setItem("refreshToken", newRefresh);
 
         originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (err) {
-        await AsyncStorage.clear();
+        await logout();
         router.replace("/auth/login");
         return Promise.reject(err);
       }
     }
-
     return Promise.reject(error);
   }
 );
