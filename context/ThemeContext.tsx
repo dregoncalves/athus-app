@@ -29,7 +29,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setIsDarkMode((prev) => !prev);
   };
 
-  // Estrutura pra implementação futura de dark mode
   const themeColors = colors;
 
   const value = {

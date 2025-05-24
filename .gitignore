@@ -3,11 +3,26 @@ node_modules/
 
 # expo
 .expo/
+.expo-shared/
 dist/
 web-build/
 expo-env.d.ts
 
-# native
+# native - Android build outputs
+android/.gradle/
+android/.cxx/
+android/app/build/
+android/build/
+
+# native - iOS build outputs
+ios/build/
+ios/Pods/
+ios/Podfile.lock
+ios/xcuserdata/
+ios/*.xcworkspace
+ios/*.xcuserdata
+
+# native - sensitive/cert files
 *.orig.*
 *.jks
 *.p8
