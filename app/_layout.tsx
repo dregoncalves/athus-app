@@ -13,8 +13,9 @@ import {
 } from '@expo-google-fonts/poppins';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import Toast, { BaseToast, BaseToastProps, ErrorToast } from 'react-native-toast-message';
 import { colors } from '@/constants/colors';
+import { SafeAreaProvider } from 'react-native-safe-area-context'; // IMPORTADO!
 
 // Configuração customizada do Toast
 const toastConfig = {
@@ -45,11 +46,11 @@ const toastConfig = {
       }}
     />
   ),
-  error: (props) => (
+  error: (props: React.JSX.IntrinsicAttributes & BaseToastProps) => (
     <ErrorToast
       {...props}
       style={{
-        borderLeftColor: colors.error || '#d9534f',
+        borderLeftColor: colors.danger || '#d9534f',
         backgroundColor: colors.white,
         borderRadius: 12,
         minHeight: 64,
@@ -63,7 +64,7 @@ const toastConfig = {
       text1Style={{
         fontFamily: 'Poppins-Bold',
         fontSize: 16,
-        color: colors.error || '#d9534f',
+        color: colors.danger || '#d9534f',
       }}
       text2Style={{
         fontFamily: 'Poppins-Regular',
@@ -95,23 +96,25 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/register" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="auth/verify-email"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="provider/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
-        </Stack>
-        <StatusBar style="auto" />
-        <Toast config={toastConfig} />
-      </ThemeProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="auth/verify-email"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen name="provider/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
+          </Stack>
+          <StatusBar style="dark" />
+          <Toast config={toastConfig} />
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

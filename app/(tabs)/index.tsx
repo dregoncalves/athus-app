@@ -1,59 +1,246 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useAuth } from '@/hooks/useAuth'; // ajuste o path se necessário
+import { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, RefreshControl, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { SearchInput } from '@/components/SearchInput';
+import { FilterBar } from '@/components/FilterBar';
+import { colors } from '@/constants/colors';
+import { mockServiceProviders } from '@/data/mockData';
+import { ChevronLeft, ChevronRight, Wrench, Scissors, Home, Brush, Car, Book, Heart, Coffee, ShoppingBag, Laptop } from 'lucide-react-native';
+import { ServiceProviderCard } from '@/components/ServiceProviderCard';
 
-export default function ProfilePage() {
-  const { logout } = useAuth();
+const categories = [
+  { id: '1', name: 'Manutenção', icon: Wrench },
+  { id: '2', name: 'Beleza', icon: Scissors },
+  { id: '3', name: 'Domésticos', icon: Home },
+  { id: '4', name: 'Pintura', icon: Brush },
+  { id: '5', name: 'Mecânica', icon: Car },
+  { id: '6', name: 'Educação', icon: Book },
+  { id: '7', name: 'Saúde', icon: Heart },
+  { id: '8', name: 'Alimentação', icon: Coffee },
+  { id: '9', name: 'Vendas', icon: ShoppingBag },
+  { id: '10', name: 'Tecnologia', icon: Laptop },
+];
+
+export default function HomeScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedSpecialization, setSelectedSpecialization] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const scrollViewRef = useCallback((node) => {
+    if (node !== null) {
+      categoryScrollRef.current = node;
+    }
+  }, []);
+  const categoryScrollRef = React.useRef<ScrollView>(null);
+  const router = useRouter();
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      categoryScrollRef.current.scrollTo({
+        x: direction === 'left' ? -120 : 120,
+        animated: true,
+      });
+    }
+  };
+
+  const filteredProviders = mockServiceProviders.filter(provider => {
+    const matchesSearch = searchQuery.trim() === '' || 
+      provider.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLocation = selectedLocation === '' || 
+      provider.location === selectedLocation;
+    const matchesSpecialization = selectedSpecialization === '' || 
+      provider.specialization === selectedSpecialization;
+    return matchesSearch && matchesLocation && matchesSpecialization;
+  });
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.name}>Perfil</Text>
-      {/* Exemplo de avatar (opcional)
-      <Image source={require('../../assets/images/avatar.png')} style={styles.avatar} />
-      */}
-      {/* Nome e e-mail do usuário podem ser exibidos aqui */}
-      <TouchableOpacity style={styles.button} onPress={logout}>
-        <Text style={styles.buttonText}>Deslogar</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.userInfo}>
+          <Text style={styles.welcomeText}>Olá, Usuário!</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <Image 
+            source={{ uri: '' }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.content}>
+        <SearchInput 
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Buscar prestadores..."
+        />
+
+        <View style={styles.categoriesContainer}>
+          
+          <ScrollView
+            ref={scrollViewRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesScroll}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity 
+                key={category.id} 
+                style={styles.categoryItem}
+                onPress={() => setSelectedSpecialization(category.name)}
+              >
+                <View style={styles.categoryIcon}>
+                  <category.icon size={24} color={colors.primary} />
+                </View>
+                <Text style={styles.categoryText}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <FilterBar 
+          selectedLocation={selectedLocation}
+          selectedSpecialization={selectedSpecialization}
+          onLocationChange={setSelectedLocation}
+          onSpecializationChange={setSelectedSpecialization}
+        />
+
+        {filteredProviders.length > 0 ? (
+          <FlatList
+            data={filteredProviders}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <ServiceProviderCard provider={item} />
+            )}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh}
+                colors={[colors.primary]} 
+                tintColor={colors.primary}
+              />
+            }
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Nenhum prestador encontrado</Text>
+            <Text style={styles.emptySubtext}>Tente ajustar seus filtros</Text>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 16,
+    color: colors.textDark,
+  },
+  profileButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  scrollButton: {
+    padding: 8,
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoriesScroll: {
+    paddingHorizontal: 8,
+  },
+  categoryItem: {
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  categoryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
+  categoryText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 12,
+    color: colors.textDark,
+    textAlign: 'center',
   },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  listContent: {
+    paddingBottom: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 18,
+    color: colors.textDark,
     marginBottom: 8,
   },
-  email: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-  },
-  button: {
-    backgroundColor: '#FF3B30',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '60%',
-    marginTop: 32,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  emptySubtext: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textLight,
   },
 });

@@ -48,16 +48,14 @@ export default function ForgotPasswordScreen() {
     }
     setLoading(true);
     try {
-      // Aqui faça o request para /auth/esqueci-senha
+      // Request para /auth/esqueci-senha
       // await AuthService.forgotPassword(email);
-      // --- Simulação ---
       await new Promise((resolve) => setTimeout(resolve, 1200));
       Toast.show({
         type: 'success',
         text1: 'Código enviado!',
         text2: 'Verifique seu e-mail para redefinir a senha.',
       });
-      // Se quiser redirecionar para tela de código, faça aqui
     } catch (err) {
       Toast.show({
         type: 'error',
@@ -118,8 +116,6 @@ export default function ForgotPasswordScreen() {
               loading={loading}
               disabled={loading || !email || !isValidEmail(email)}
               style={styles.button}
-              accessibilityLabel="Botão enviar código"
-              testID="forgot-btn"
             />
 
             <TouchableOpacity
@@ -151,7 +147,7 @@ const styles = StyleSheet.create({
     height: 50, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.lightGray,
     borderRadius: 8, paddingHorizontal: 16, fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textDark,
   },
-  errorText: { color: colors.error || '#c00', fontFamily: 'Poppins-Regular', marginTop: 6, marginLeft: 2 },
+  errorText: { color: colors.danger || '#c00', fontFamily: 'Poppins-Regular', marginTop: 6, marginLeft: 2 },
   button: { marginTop: 8, marginBottom: 24 },
   loginLinkContainer: { alignItems: 'center', marginTop: 12 },
   loginLinkText: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.primary },
