@@ -1,8 +1,5 @@
-// services/authService.ts
-import { SignUpPayload } from "@/types/SignUpPayload";
 import api from "./api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "@/types/User";
 
 // LOGIN
 export async function login(email: string, senha: string) {
@@ -15,8 +12,8 @@ export async function login(email: string, senha: string) {
   return response.data;
 }
 
-// CADASTRO. SignUpPayload é a interface de cadastro inicial. Impede campos errados.
-export async function signUp(payload: SignUpPayload) {
+// CADASTRO (payload pode ser qualquer objeto do seu multi-step)
+export async function signUp(payload: any) {
   const response = await api.post("/auth/cadastrar", payload);
   return response.data;
 }
@@ -33,25 +30,19 @@ export async function logout() {
 }
 
 export async function loginWithGoogle(accessToken: string) {
-  // Faça a chamada para autenticar
   const response = await api.post("/oauth2/google/autenticado", {
     access_token: accessToken,
   });
 
-  // Pegue accessToken e refreshToken do response
-  const token = response.data.body.accessToken;
-  const refreshToken = response.data.body.refreshToken;
-
-  // Salve ambos os tokens!
-  await AsyncStorage.setItem("authToken", token);
-  await AsyncStorage.setItem("refreshToken", refreshToken);
-
-  // Agora pode fazer a request autenticada para pegar o usuário
-  const userResponse = await api.get("/usuarios/{id}"); // ajuste o endpoint se necessário
-  const user: User = userResponse.data;
-
-  await AsyncStorage.setItem("user", JSON.stringify(user));
-
-  return { token, refreshToken, user };
+  if (response.data?.token && response.data?.refreshToken) {
+    await AsyncStorage.setItem("authToken", response.data.token);
+    await AsyncStorage.setItem("refreshToken", response.data.refreshToken);
+    return response.data;
+  } else if (response.data?.body?.accessToken) {
+    await AsyncStorage.setItem("authToken", response.data.body.accessToken);
+    await AsyncStorage.setItem("refreshToken", response.data.body.refreshToken);
+    return response.data;
+  } else {
+    throw new Error("Token não retornado pelo servidor.");
+  }
 }
-

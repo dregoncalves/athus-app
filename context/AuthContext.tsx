@@ -3,8 +3,7 @@ import React, { createContext, useEffect, useState, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import * as AuthService from "../services/authService";
-import { User } from "@/types/User"; // Use o caminho relativo se necessário, ex: ../types/User
-
+import { User } from "@/types/User";
 interface AuthContextData {
   user: User | null;
   loading: boolean;

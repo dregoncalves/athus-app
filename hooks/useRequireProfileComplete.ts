@@ -33,7 +33,7 @@ export function useRequireProfileComplete() {
           onBlocked();
         } else {
           // Default: redireciona para editar perfil
-          router.push('/');
+          router.push('/(tabs)/profile');
         }
       }
     },
