@@ -4,6 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import * as AuthService from "../services/authService";
 import { User } from "@/types/User";
+
+// ATUALIZE SUA INTERFACE:
 interface AuthContextData {
   user: User | null;
   loading: boolean;
@@ -11,6 +13,7 @@ interface AuthContextData {
   logout: () => Promise<void>;
   signUp: (payload: any) => Promise<void>;
   verifyEmail: (email: string, codigo: string) => Promise<void>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>; // <- Adiciona aqui
 }
 
 export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -88,7 +91,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, signUp, verifyEmail }}
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        signUp,
+        verifyEmail,
+        setUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

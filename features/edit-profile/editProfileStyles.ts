@@ -1,3 +1,4 @@
+// /register/registerStyles.ts
 import { StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
 
@@ -21,20 +22,20 @@ export const registerStyles = StyleSheet.create({
   title: {
     fontFamily: 'Poppins-Bold',
     fontSize: 28,
-    color: colors.textDark,
+    color: colors.black,
     marginBottom: 8,
   },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: colors.textLight,
+    color: colors.black,
     marginBottom: 24,
   },
   inputContainer: { marginBottom: 16 },
   inputLabel: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.textDark,
+    color: colors.black,
     marginBottom: 2,
   },
   input: {
@@ -46,7 +47,7 @@ export const registerStyles = StyleSheet.create({
     paddingHorizontal: 16,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: colors.textDark,
+    color: colors.black,
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -63,7 +64,7 @@ export const registerStyles = StyleSheet.create({
     paddingHorizontal: 16,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: colors.textDark,
+    color: colors.black,
   },
   eyeIcon: { padding: 12 },
   registerButton: { 

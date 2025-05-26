@@ -1,3 +1,4 @@
+// /register/step1.tsx
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -16,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { useFormContext, Controller } from 'react-hook-form';
 import { MaskedTextInput } from 'react-native-mask-text';
 import { ArrowLeft } from 'lucide-react-native';
-import { registerStyles } from './registerStyles';
+import { registerStyles } from './editProfileStyles';
 import { colors } from '@/constants/colors';
 
 export default function Step1({ onNext }: { onNext: () => void }) {
@@ -97,6 +98,7 @@ export default function Step1({ onNext }: { onNext: () => void }) {
                   <TextInput
                     style={registerStyles.input}
                     placeholder="Digite seu nome completo"
+                    placeholderTextColor={colors.black}
                     value={value}
                     onChangeText={onChange}
                     autoCapitalize="words"
@@ -137,6 +139,7 @@ export default function Step1({ onNext }: { onNext: () => void }) {
                     ref={emailRef}
                     style={registerStyles.input}
                     placeholder="Digite seu e-mail"
+                    placeholderTextColor={colors.black}
                     value={value}
                     onChangeText={onChange}
                     keyboardType="email-address"
@@ -179,6 +182,7 @@ export default function Step1({ onNext }: { onNext: () => void }) {
                     mask="(99) 9 9999-9999"
                     keyboardType="phone-pad"
                     placeholder="(DD) 9 9999-9999"
+                    placeholderTextColor={colors.black}
                     value={value || ''}
                     onChangeText={onChange}
                     style={registerStyles.input}
@@ -237,12 +241,13 @@ const styles = StyleSheet.create({
   },
   inputsContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end'
   },
   inputsScroll: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingBottom: 0,
+    color: colors.black
   },
   buttonContainer: {
     justifyContent: 'flex-end',

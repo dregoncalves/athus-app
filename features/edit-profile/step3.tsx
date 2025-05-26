@@ -1,3 +1,4 @@
+// /register/step3.tsx
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -13,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFormContext, Controller } from 'react-hook-form';
 import { Eye, EyeOff, ArrowLeft, Calendar } from 'lucide-react-native';
-import { registerStyles } from './registerStyles';
+import { registerStyles } from './editProfileStyles';
 import { colors } from '@/constants/colors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -191,6 +192,7 @@ export default function Step3({
                     ref={cpfRef}
                     style={registerStyles.input}
                     placeholder="000.000.000-00"
+                    placeholderTextColor={colors.black}
                     value={maskCPF(value || '')}
                     onChangeText={(t) => onChange(maskCPF(t))}
                     keyboardType="number-pad"
@@ -290,6 +292,7 @@ export default function Step3({
                       ref={passwordRef}
                       style={[registerStyles.input, { flex: 1 }]}
                       placeholder="Digite sua senha"
+                      placeholderTextColor={colors.black}
                       value={value}
                       onChangeText={onChange}
                       secureTextEntry={!showPassword}
@@ -338,6 +341,7 @@ export default function Step3({
                       ref={confirmRef}
                       style={[registerStyles.input, { flex: 1 }]}
                       placeholder="Confirme sua senha"
+                      placeholderTextColor={colors.black}
                       value={value}
                       onChangeText={onChange}
                       secureTextEntry={!showConfirm}

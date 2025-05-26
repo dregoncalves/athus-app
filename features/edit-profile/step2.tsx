@@ -1,3 +1,4 @@
+// /register/step2.tsx
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -13,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ArrowLeft } from 'lucide-react-native';
-import { registerStyles } from './registerStyles';
+import { registerStyles } from './editProfileStyles';
 import { colors } from '@/constants/colors';
 
 export default function Step2({
@@ -149,6 +150,7 @@ export default function Step2({
                     <TextInput
                       style={registerStyles.input}
                       placeholder="00000-000"
+                      placeholderTextColor={colors.black}
                       value={value}
                       onChangeText={(text) => {
                         let cep = text.replace(/\D/g, '');
@@ -192,6 +194,7 @@ export default function Step2({
                     <TextInput
                       style={registerStyles.input}
                       placeholder="País"
+                      placeholderTextColor={colors.black}
                       value={value}
                       onChangeText={onChange}
                       autoCapitalize="words"
@@ -216,6 +219,7 @@ export default function Step2({
                     <TextInput
                       style={registerStyles.input}
                       placeholder="Estado"
+                      placeholderTextColor={colors.black}
                       value={value}
                       onChangeText={onChange}
                       autoCapitalize="characters"
@@ -243,6 +247,7 @@ export default function Step2({
                   <TextInput
                     style={registerStyles.input}
                     placeholder="Cidade"
+                    placeholderTextColor={colors.black}
                     value={value}
                     onChangeText={onChange}
                     autoCapitalize="words"
@@ -269,6 +274,7 @@ export default function Step2({
                   <TextInput
                     style={registerStyles.input}
                     placeholder="Digite sua rua"
+                    placeholderTextColor={colors.black}
                     value={value}
                     onChangeText={onChange}
                     autoCapitalize="words"
@@ -297,6 +303,7 @@ export default function Step2({
                       ref={numeroRef}
                       style={registerStyles.input}
                       placeholder="Número"
+                      placeholderTextColor={colors.black}
                       value={value}
                       onChangeText={onChange}
                       keyboardType="number-pad"
