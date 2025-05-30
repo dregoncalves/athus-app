@@ -25,7 +25,8 @@ import { loginWithGoogle } from '@/services/authService';
 import { SignUpPayload } from '@/types/SignUpPayload';
 
 GoogleSignin.configure({
-  webClientId: '302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com',
+  webClientId:
+    '302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com',
   offlineAccess: true,
 });
 
@@ -62,15 +63,24 @@ export default function RegisterScreen() {
     if (!password) errs.password = 'Digite sua senha.';
     else if (password.length < 6) errs.password = 'Mínimo 6 caracteres.';
     if (!confirmPassword) errs.confirmPassword = 'Confirme sua senha.';
-    else if (password !== confirmPassword) errs.confirmPassword = 'Senhas não conferem.';
+    else if (password !== confirmPassword)
+      errs.confirmPassword = 'Senhas não conferem.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
 
   function animateEye(eye: Animated.Value) {
     Animated.sequence([
-      Animated.timing(eye, { toValue: 1.2, duration: 100, useNativeDriver: true }),
-      Animated.timing(eye, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(eye, {
+        toValue: 1.2,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(eye, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
     ]).start();
   }
 
@@ -89,7 +99,10 @@ export default function RegisterScreen() {
         text1: 'Cadastro realizado!',
         text2: 'Verifique seu e-mail para confirmar.',
       });
-      router.push({ pathname: '/auth/verify-email', params: { email, senha: password } });
+      router.push({
+        pathname: '/auth/verify-email',
+        params: { email, senha: password },
+      });
     } catch (error: any) {
       if (error?.response?.status === 409) {
         Toast.show({
@@ -109,16 +122,23 @@ export default function RegisterScreen() {
     }
   };
 
+  const { loginWithGoogle } = useAuth();
+
   async function handleGoogleRegister() {
     try {
       await GoogleSignin.hasPlayServices();
       await GoogleSignin.signOut();
       const userInfo = await GoogleSignin.signIn();
       const { accessToken } = await GoogleSignin.getTokens();
-      if (!accessToken) throw new Error('Não foi possível obter o accessToken do Google.');
-      await loginWithGoogle(accessToken);
-      Toast.show({ type: 'success', text1: 'Cadastro e login realizados com Google!' });
-      router.replace('/(tabs)');
+      if (!accessToken)
+        throw new Error('Não foi possível obter o accessToken do Google.');
+
+      await loginWithGoogle(accessToken); // <-- agora do contexto!
+      Toast.show({
+        type: 'success',
+        text1: 'Cadastro e login realizados com Google!',
+      });
+      // router.replace('/(tabs)'); // Não precisa, já faz no contexto
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -172,7 +192,9 @@ export default function RegisterScreen() {
                 placeholderTextColor={colors.textLight}
               />
             </View>
-            {errors.fullName && <Text style={styles.errorMsg}>{errors.fullName}</Text>}
+            {errors.fullName && (
+              <Text style={styles.errorMsg}>{errors.fullName}</Text>
+            )}
           </View>
 
           {/* E-mail */}
@@ -207,7 +229,9 @@ export default function RegisterScreen() {
                 placeholderTextColor={colors.textLight}
               />
             </View>
-            {errors.email && <Text style={styles.errorMsg}>{errors.email}</Text>}
+            {errors.email && (
+              <Text style={styles.errorMsg}>{errors.email}</Text>
+            )}
           </View>
 
           {/* Senha */}
@@ -247,7 +271,9 @@ export default function RegisterScreen() {
                   animateEye(eyeAnim);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                accessibilityLabel={
+                  showPassword ? 'Ocultar senha' : 'Mostrar senha'
+                }
                 activeOpacity={0.8}
               >
                 <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
@@ -260,9 +286,12 @@ export default function RegisterScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.passwordTip}>
-              Use pelo menos 6 caracteres. Combine letras e números para mais segurança.
+              Use pelo menos 6 caracteres. Combine letras e números para mais
+              segurança.
             </Text>
-            {errors.password && <Text style={styles.errorMsg}>{errors.password}</Text>}
+            {errors.password && (
+              <Text style={styles.errorMsg}>{errors.password}</Text>
+            )}
           </View>
 
           {/* Confirmar senha */}
@@ -301,7 +330,9 @@ export default function RegisterScreen() {
                   animateEye(eyeAnim2);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                accessibilityLabel={
+                  showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'
+                }
                 activeOpacity={0.8}
               >
                 <Animated.View style={{ transform: [{ scale: eyeAnim2 }] }}>
@@ -323,11 +354,7 @@ export default function RegisterScreen() {
             onPress={handleRegister}
             loading={loading}
             disabled={
-              loading ||
-              !fullName ||
-              !email ||
-              !password ||
-              !confirmPassword
+              loading || !fullName || !email || !password || !confirmPassword
             }
             style={[
               styles.loginButton, // usa o mesmo do login

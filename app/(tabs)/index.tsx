@@ -1,15 +1,38 @@
-import React from 'react';
-import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useContext, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { SearchInput } from '@/components/SearchInput';
 import { FilterBar } from '@/components/FilterBar';
 import { colors } from '@/constants/colors';
 import { mockServiceProviders } from '@/data/mockData';
-import { ChevronLeft, ChevronRight, Wrench, Scissors, Home, Brush, Car, Book, Heart, Coffee, ShoppingBag, Laptop } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Wrench,
+  Scissors,
+  Home,
+  Brush,
+  Car,
+  Book,
+  Heart,
+  Coffee,
+  ShoppingBag,
+  Laptop,
+  User as UserIcon,
+} from 'lucide-react-native';
 import { ServiceProviderCard } from '@/components/ServiceProviderCard';
 import { StatusBar } from 'expo-status-bar';
+import { AuthContext } from '@/context/AuthContext';
 
 const categories = [
   { id: '1', name: 'Manutenção', icon: Wrench },
@@ -25,10 +48,12 @@ const categories = [
 ];
 
 export default function HomeScreen() {
+  const { user, loading } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
   const scrollViewRef = useCallback((node) => {
     if (node !== null) {
       categoryScrollRef.current = node;
@@ -53,43 +78,54 @@ export default function HomeScreen() {
     }
   };
 
-  const filteredProviders = mockServiceProviders.filter(provider => {
-    const matchesSearch = searchQuery.trim() === '' || 
+  const filteredProviders = mockServiceProviders.filter((provider) => {
+    const matchesSearch =
+      searchQuery.trim() === '' ||
       provider.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation = selectedLocation === '' || 
-      provider.location === selectedLocation;
-    const matchesSpecialization = selectedSpecialization === '' || 
+    const matchesLocation =
+      selectedLocation === '' || provider.location === selectedLocation;
+    const matchesSpecialization =
+      selectedSpecialization === '' ||
       provider.specialization === selectedSpecialization;
     return matchesSearch && matchesLocation && matchesSpecialization;
   });
+
+  // Novos: nome e imagem do user autenticado
+  const userName = user?.nome ? `Olá, ${user.nome.split(' ')[0]}!` : 'Olá!';
+  const profileImageUri = user?.imagemPerfil || '';
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <View style={styles.header}>
         <View style={styles.userInfo}>
-          <Text style={styles.welcomeText}>Olá, Usuário!</Text>
+          <Text style={styles.welcomeText}>{userName}</Text>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.profileButton}
           onPress={() => router.push('/(tabs)/profile')}
         >
-          <Image 
-            // source={{ uri: '' }}
-            style={styles.profileImage}
-          />
+          {profileImageUri ? (
+            <Image
+              source={{ uri: profileImageUri }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <View style={styles.profileImagePlaceholder}>
+              <UserIcon size={20} color={colors.white} />
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
-        <SearchInput 
+        <SearchInput
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Buscar prestadores..."
         />
 
         <View style={styles.categoriesContainer}>
-          
           <ScrollView
             ref={scrollViewRef}
             horizontal
@@ -97,8 +133,8 @@ export default function HomeScreen() {
             contentContainerStyle={styles.categoriesScroll}
           >
             {categories.map((category) => (
-              <TouchableOpacity 
-                key={category.id} 
+              <TouchableOpacity
+                key={category.id}
                 style={styles.categoryItem}
                 onPress={() => setSelectedSpecialization(category.name)}
               >
@@ -111,7 +147,7 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        <FilterBar 
+        <FilterBar
           selectedLocation={selectedLocation}
           selectedSpecialization={selectedSpecialization}
           onLocationChange={setSelectedLocation}
@@ -122,16 +158,14 @@ export default function HomeScreen() {
           <FlatList
             data={filteredProviders}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <ServiceProviderCard provider={item} />
-            )}
+            renderItem={({ item }) => <ServiceProviderCard provider={item} />}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
             refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
+              <RefreshControl
+                refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={[colors.primary]} 
+                colors={[colors.primary]}
                 tintColor={colors.primary}
               />
             }
@@ -175,10 +209,22 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     overflow: 'hidden',
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 16,
+  },
+  profileImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,

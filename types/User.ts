@@ -1,3 +1,4 @@
+// types/User.ts
 // Os campos com | null são opcionais, eles não fazem parte dos dados iniciais obrigatórios (nome, email e senha).
 export interface User {
   id: number;
