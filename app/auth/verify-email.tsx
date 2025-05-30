@@ -9,12 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Image,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Button } from '@/components/Button';
-import { ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
@@ -119,9 +120,7 @@ export default function VerifyEmailScreen() {
     setLoading(true);
     setError('');
     try {
-      console.log('Enviando:', email, codigo);
       const resposta = await verifyEmail(email, codigo);
-      console.log('RESPOSTA DA API:', resposta); // <-- Veja exatamente o que vem!
       Toast.show({
         type: 'success',
         text1: 'E-mail verificado com sucesso!',
@@ -134,10 +133,6 @@ export default function VerifyEmailScreen() {
         type: 'error',
         text1: 'Código inválido ou expirado.',
       });
-      console.log(
-        'Erro ao verificar e-mail:',
-        err?.response?.data || err.message
-      );
       triggerShake();
     } finally {
       setLoading(false);
@@ -158,7 +153,7 @@ export default function VerifyEmailScreen() {
     // Aqui você pode chamar a função para realmente reenviar o código na API!
   };
 
-  // Valor interpolado do shake (vai de -8 a 8 px)
+  // Shake: de -8 a 8 px
   const shakeInterpolate = shakeAnim.interpolate({
     inputRange: [-1, 1],
     outputRange: [-8, 8],
@@ -170,10 +165,24 @@ export default function VerifyEmailScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
-        <View style={styles.content}>
-          <Text style={styles.title}>Verificar e-mail</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+            accessible
+            accessibilityLabel="Logo Athus"
+          />
           <Text style={styles.subtitle}>
-            Enviamos um código de verificação para o e-mail:{' '}
+            Verifique seu e-mail para acessar todos os recursos do app!
+          </Text>
+
+          <Text style={styles.infoText}>
+            Enviamos um código para: {' '}
             <Text style={styles.emailText}>{email}</Text>
           </Text>
 
@@ -184,49 +193,63 @@ export default function VerifyEmailScreen() {
             ]}
           >
             {code.map((digit, index) => (
-              <TextInput
+              <View
                 key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
                 style={[
-                  styles.codeInput,
-                  digit ? styles.codeInputFilled : null,
-                  focusedIndex === index ? styles.codeInputFocused : null,
-                  error ? styles.codeInputError : null,
+                  styles.inputWrapper,
+                  error
+                    ? styles.inputError
+                    : focusedIndex === index
+                    ? styles.inputFocused
+                    : styles.inputDefault,
+                  { width: 48, marginHorizontal: 3, paddingHorizontal: 0 },
                 ]}
-                value={digit}
-                onChangeText={(text) => {
-                  if (text.length > 1) handlePaste(text);
-                  else handleCodeChange(text, index);
-                }}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                maxLength={1}
-                keyboardType="number-pad"
-                textAlign="center"
-                returnKeyType={index === code.length - 1 ? 'done' : 'next'}
-                onSubmitEditing={handleVerify}
-                onFocus={() => setFocusedIndex(index)}
-                accessible
-                accessibilityLabel={`Dígito ${index + 1} do código`}
-                importantForAccessibility="yes"
-              />
+              >
+                <TextInput
+                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  style={[
+                    styles.input,
+                    styles.codeInputText,
+                  ]}
+                  value={digit}
+                  onChangeText={(text) => {
+                    if (text.length > 1) handlePaste(text);
+                    else handleCodeChange(text, index);
+                  }}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  maxLength={1}
+                  keyboardType="number-pad"
+                  textAlign="center"
+                  returnKeyType={index === code.length - 1 ? 'done' : 'next'}
+                  onSubmitEditing={handleVerify}
+                  onFocus={() => setFocusedIndex(index)}
+                  accessibilityLabel={`Dígito ${index + 1} do código`}
+                  importantForAccessibility="yes"
+                  placeholder="•"
+                  placeholderTextColor={colors.textLight}
+                />
+              </View>
             ))}
           </Animated.View>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? <Text style={styles.errorMsg}>{error}</Text> : null}
 
           <Button
             title={loading ? 'Verificando...' : 'Verificar'}
             onPress={handleVerify}
             loading={loading}
-            style={styles.verifyButton}
-            disabled={
-              loading || code.some((c) => !c) || code.join('').length !== 6
-            }
+            style={[
+              styles.loginButton,
+              (loading || code.some((c) => !c) || code.join('').length !== 6) &&
+                styles.loginButtonDisabled,
+            ]}
+            textStyle={styles.loginButtonText}
+            disabled={loading || code.some((c) => !c) || code.join('').length !== 6}
             accessibilityLabel="Botão para verificar o código"
           />
 
-          <View style={styles.resendContainer}>
-            <Text style={styles.resendText}>Não recebeu o código?</Text>
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Não recebeu o código?</Text>
             {timer > 0 ? (
               <Text style={styles.timerText}>Reenviar em {timer}s</Text>
             ) : (
@@ -235,11 +258,11 @@ export default function VerifyEmailScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Reenviar código"
               >
-                <Text style={styles.resendLink}>Reenviar código</Text>
+                <Text style={styles.registerLink}>Reenviar código</Text>
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -247,96 +270,113 @@ export default function VerifyEmailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  keyboardAvoidingView: { flex: 1, paddingHorizontal: 14 },
-  content: {
-    flex: 1,
+  keyboardAvoidingView: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 100,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
-  title: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 28,
-    color: colors.textDark,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+  logo: { width: 120, height: 120, alignSelf: 'center', marginBottom: 32 },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
-    marginBottom: 8,
+    marginBottom: 18,
     textAlign: 'center',
-    lineHeight: 20,
   },
-  emailText: { fontFamily: 'Poppins-Medium', color: colors.primary },
   infoText: {
     fontFamily: 'Poppins-Regular',
     color: colors.textLight,
     fontSize: 13,
-    marginBottom: 28,
+    marginBottom: 18,
     textAlign: 'center',
-    maxWidth: 330,
     lineHeight: 18,
   },
+  emailText: { fontFamily: 'Poppins-Medium', color: colors.primary },
   codeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 32,
-    alignItems: 'center',
-    paddingHorizontal: 18,
-  },
-  codeInput: {
-    width: 42,
-    height: 52,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 12,
-    fontSize: 22,
-    fontFamily: 'Poppins-Medium',
-    backgroundColor: colors.white,
-    textAlign: 'center',
-    marginHorizontal: 4,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 0,
-    paddingVertical: 0,
+    width: '100%',
+    marginBottom: 28,
+    alignItems: 'center',
   },
-  codeInputFilled: {
-    borderColor: colors.primary,
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    minHeight: 50,
+    height: 52,
+    justifyContent: 'center',
   },
-  codeInputFocused: {
-    borderColor: colors.primary,
-    backgroundColor: '#F0F6FF',
-  },
-  codeInputError: {
-    borderColor: colors.danger || '#c00',
-  },
-  errorText: {
-    color: colors.danger || '#c00',
-    marginBottom: 10,
+  input: {
+    flex: 1,
+    height: 50,
     fontFamily: 'Poppins-Regular',
-    fontSize: 14,
+    fontSize: 22,
+    color: '#222',
+    backgroundColor: 'transparent',
+    textAlign: 'center',
+    paddingHorizontal: 0,
+  },
+  codeInputText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 22,
+    letterSpacing: 2,
+  },
+  inputDefault: {
+    borderColor: colors.mediumGray,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  inputError: {
+    borderColor: colors.danger,
+  },
+  errorMsg: {
+    color: colors.danger,
+    fontSize: 13,
+    marginTop: 2,
+    marginLeft: 2,
+    marginBottom: 8,
+    fontFamily: 'Poppins-Regular',
     textAlign: 'center',
   },
-  verifyButton: { width: '100%', marginBottom: 20 },
-  resendContainer: {
+  loginButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    marginBottom: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  loginButtonDisabled: {
+    backgroundColor: colors.primaryBackgroundLight,
+  },
+  loginButtonText: {
+    color: colors.white,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+  },
+  registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 12,
+    marginTop: 6,
+    marginBottom: 18,
   },
-  resendText: {
+  registerText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
     marginRight: 4,
   },
-  resendLink: {
+  registerLink: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
     color: colors.primary,
-    textDecorationLine: 'underline',
   },
   timerText: {
     fontFamily: 'Poppins-Medium',

@@ -16,14 +16,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Button } from '@/components/Button';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { loginWithGoogle } from '@/services/authService';
 import { SignUpPayload } from '@/types/SignUpPayload';
-import { BlurView } from 'expo-blur';
 
 GoogleSignin.configure({
   webClientId: '302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com',
@@ -44,7 +43,6 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [focusedField, setFocusedField] = useState('');
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [eyeAnim] = useState(new Animated.Value(1));
@@ -86,7 +84,6 @@ export default function RegisterScreen() {
         senha: password,
       };
       await signUp(payload);
-
       Toast.show({
         type: 'success',
         text1: 'Cadastro realizado!',
@@ -142,43 +139,29 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Image
-            source={require('../../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-            accessible
-            accessibilityLabel="Logo Athus"
-          />
-          {/* <Text style={styles.title}>Criar conta</Text> */}
-          <Text style={styles.subtitle}>
+          {/* <Text style={styles.subtitle}>
             Crie sua conta para descobrir talentos na sua quebrada!
-          </Text>
+          </Text> */}
 
           {/* Nome completo */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Nome completo</Text>
-            <BlurView
-              intensity={60}
-              tint="default"
+            <View
               style={[
-                styles.blurInput,
-                (focusedField === 'fullName' || errors.fullName) && styles.inputShadow,
+                styles.inputWrapper,
+                errors.fullName
+                  ? styles.inputError
+                  : focusedField === 'fullName'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
               ]}
             >
               <TextInput
-                style={[
-                  styles.input,
-                  errors.fullName
-                    ? styles.inputError
-                    : focusedField === 'fullName'
-                    ? styles.inputFocused
-                    : null,
-                ]}
+                style={styles.input}
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Digite seu nome completo"
                 autoCapitalize="words"
-                autoFocus
                 returnKeyType="next"
                 onSubmitEditing={() => emailRef.current?.focus()}
                 blurOnSubmit={false}
@@ -188,31 +171,26 @@ export default function RegisterScreen() {
                 onBlur={() => setFocusedField('')}
                 placeholderTextColor={colors.textLight}
               />
-            </BlurView>
+            </View>
             {errors.fullName && <Text style={styles.errorMsg}>{errors.fullName}</Text>}
           </View>
 
           {/* E-mail */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>E-mail</Text>
-            <BlurView
-              intensity={60}
-              tint="default"
+            <View
               style={[
-                styles.blurInput,
-                (focusedField === 'email' || errors.email) && styles.inputShadow,
+                styles.inputWrapper,
+                errors.email
+                  ? styles.inputError
+                  : focusedField === 'email'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
               ]}
             >
               <TextInput
                 ref={emailRef}
-                style={[
-                  styles.input,
-                  errors.email
-                    ? styles.inputError
-                    : focusedField === 'email'
-                    ? styles.inputFocused
-                    : null,
-                ]}
+                style={styles.input}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Digite seu e-mail"
@@ -228,68 +206,59 @@ export default function RegisterScreen() {
                 onBlur={() => setFocusedField('')}
                 placeholderTextColor={colors.textLight}
               />
-            </BlurView>
+            </View>
             {errors.email && <Text style={styles.errorMsg}>{errors.email}</Text>}
           </View>
 
           {/* Senha */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Senha</Text>
-            <BlurView
-              intensity={60}
-              tint="default"
+            <View
               style={[
-                styles.blurInput,
-                (focusedField === 'password' || errors.password) && styles.inputShadow,
+                styles.inputWrapper,
+                errors.password
+                  ? styles.inputError
+                  : focusedField === 'password'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
               ]}
             >
-              <View
-                style={[
-                  styles.passwordContainer,
-                  errors.password
-                    ? styles.inputError
-                    : focusedField === 'password'
-                    ? styles.inputFocused
-                    : null,
-                ]}
+              <TextInput
+                ref={passwordRef}
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Digite sua senha"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                blurOnSubmit={false}
+                textContentType="newPassword"
+                accessibilityLabel="Senha"
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField('')}
+                placeholderTextColor={colors.textLight}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => {
+                  setShowPassword(!showPassword);
+                  animateEye(eyeAnim);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                activeOpacity={0.8}
               >
-                <TextInput
-                  ref={passwordRef}
-                  style={styles.passwordInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Digite sua senha"
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  returnKeyType="next"
-                  onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-                  blurOnSubmit={false}
-                  textContentType="newPassword"
-                  accessibilityLabel="Senha"
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField('')}
-                  placeholderTextColor={colors.textLight}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => {
-                    setShowPassword(!showPassword);
-                    animateEye(eyeAnim);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  activeOpacity={0.8}
-                >
-                  <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
-                    {showPassword ? (
-                      <EyeOff size={20} color={colors.textLight} />
-                    ) : (
-                      <Eye size={20} color={colors.textLight} />
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              </View>
-            </BlurView>
+                <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
+                  {showPassword ? (
+                    <EyeOff size={20} color={colors.primary} />
+                  ) : (
+                    <Eye size={20} color={colors.primary} />
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.passwordTip}>
               Use pelo menos 6 caracteres. Combine letras e números para mais segurança.
             </Text>
@@ -299,60 +268,51 @@ export default function RegisterScreen() {
           {/* Confirmar senha */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Confirmar senha</Text>
-            <BlurView
-              intensity={60}
-              tint="default"
+            <View
               style={[
-                styles.blurInput,
-                (focusedField === 'confirmPassword' || errors.confirmPassword) && styles.inputShadow,
+                styles.inputWrapper,
+                errors.confirmPassword
+                  ? styles.inputError
+                  : focusedField === 'confirmPassword'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
               ]}
             >
-              <View
-                style={[
-                  styles.passwordContainer,
-                  errors.confirmPassword
-                    ? styles.inputError
-                    : focusedField === 'confirmPassword'
-                    ? styles.inputFocused
-                    : null,
-                ]}
+              <TextInput
+                ref={confirmPasswordRef}
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirme sua senha"
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                returnKeyType="done"
+                onSubmitEditing={handleRegister}
+                textContentType="newPassword"
+                accessibilityLabel="Confirmar senha"
+                onFocus={() => setFocusedField('confirmPassword')}
+                onBlur={() => setFocusedField('')}
+                placeholderTextColor={colors.textLight}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => {
+                  setShowConfirmPassword(!showConfirmPassword);
+                  animateEye(eyeAnim2);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                activeOpacity={0.8}
               >
-                <TextInput
-                  ref={confirmPasswordRef}
-                  style={styles.passwordInput}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirme sua senha"
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                  onSubmitEditing={handleRegister}
-                  textContentType="newPassword"
-                  accessibilityLabel="Confirmar senha"
-                  onFocus={() => setFocusedField('confirmPassword')}
-                  onBlur={() => setFocusedField('')}
-                  placeholderTextColor={colors.textLight}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => {
-                    setShowConfirmPassword(!showConfirmPassword);
-                    animateEye(eyeAnim2);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  activeOpacity={0.8}
-                >
-                  <Animated.View style={{ transform: [{ scale: eyeAnim2 }] }}>
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} color={colors.textLight} />
-                    ) : (
-                      <Eye size={20} color={colors.textLight} />
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              </View>
-            </BlurView>
+                <Animated.View style={{ transform: [{ scale: eyeAnim2 }] }}>
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} color={colors.primary} />
+                  ) : (
+                    <Eye size={20} color={colors.primary} />
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
             {errors.confirmPassword && (
               <Text style={styles.errorMsg}>{errors.confirmPassword}</Text>
             )}
@@ -370,15 +330,15 @@ export default function RegisterScreen() {
               !confirmPassword
             }
             style={[
-              styles.registerButton,
+              styles.loginButton, // usa o mesmo do login
               (loading ||
                 !fullName ||
                 !email ||
                 !password ||
                 !confirmPassword) &&
-                styles.registerButtonDisabled,
+                styles.loginButtonDisabled,
             ]}
-            textStyle={styles.registerButtonText}
+            textStyle={styles.loginButtonText}
             accessibilityLabel="Botão de cadastro"
             testID="register-btn"
           />
@@ -403,11 +363,11 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           {/* Link para login */}
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Já tem uma conta?</Text>
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Já tem uma conta?</Text>
             <Link href="/auth/login" asChild>
               <TouchableOpacity accessibilityRole="button">
-                <Text style={styles.loginLink}>Faça login</Text>
+                <Text style={styles.registerLink}>Faça login</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -417,6 +377,7 @@ export default function RegisterScreen() {
   );
 }
 
+// Mesmo style do login!
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -441,36 +402,36 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.secondary,
+    color: colors.text,
     marginBottom: 2,
   },
-  blurInput: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 0,
-    backgroundColor: colors.secondaryLight,
-    borderWidth: 1.5,
-    borderColor: "rgba(255, 255, 255, 0)",
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    minHeight: 50,
   },
   input: {
+    flex: 1,
     height: 50,
-    borderWidth: 0,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: colors.textDark,
+    color: '#222',
+    backgroundColor: 'transparent',
+  },
+  inputDefault: {
+    borderColor: colors.mediumGray,
   },
   inputFocused: {
     borderColor: colors.primary,
-    borderWidth: 0,
+    borderWidth: 2,
   },
   inputError: {
     borderColor: colors.danger,
-    borderWidth: 2,
-  },
-  inputShadow: {
-    borderColor: colors.primary,
-    borderWidth: 2,
   },
   errorMsg: {
     color: colors.danger,
@@ -478,41 +439,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginLeft: 2,
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    paddingRight: 2,
-    backgroundColor: 'transparent',
-  },
-  passwordInput: {
-    flex: 1,
-    height: 50,
-    paddingHorizontal: 16,
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: colors.textDark,
-    backgroundColor: 'transparent',
-  },
-  eyeIcon: { padding: 12 },
+  eyeIcon: { padding: 10 },
   passwordTip: {
     fontSize: 12,
     color: colors.textLight,
     marginTop: 4,
     marginLeft: 2,
   },
-  registerButton: {
+  loginButton: {
     backgroundColor: colors.primary,
     borderRadius: 10,
     marginBottom: 18,
     paddingVertical: 14,
-    alignItems: 'center'
+    alignItems: 'center',
   },
-  registerButtonDisabled: {
-    backgroundColor: colors.secondaryLight,
+  loginButtonDisabled: {
+    backgroundColor: colors.primaryBackgroundLight,
   },
-  registerButtonText: {
-    color: colors.textLight,
+  loginButtonText: {
+    color: colors.white,
     fontFamily: 'Poppins-Bold',
     fontSize: 16,
   },
@@ -536,10 +481,10 @@ const styles = StyleSheet.create({
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.secondaryLight,
+    backgroundColor: colors.lightGray,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.secondary,
+    borderColor: colors.mediumGray,
     paddingVertical: 10,
     justifyContent: 'center',
     marginBottom: 20,
@@ -548,20 +493,20 @@ const styles = StyleSheet.create({
   googleText: {
     fontFamily: 'Poppins-Medium',
     fontSize: 15,
-    color: colors.secondary,
+    color: colors.text,
   },
-  loginContainer: {
+  registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 6,
   },
-  loginText: {
+  registerText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
     marginRight: 4,
   },
-  loginLink: {
+  registerLink: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
     color: colors.primary,

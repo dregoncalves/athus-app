@@ -19,7 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'; // IMPORTADO!
 
 // Configuração customizada do Toast
 const toastConfig = {
-  success: (props) => (
+  success: (props: React.JSX.IntrinsicAttributes & BaseToastProps) => (
     <BaseToast
       {...props}
       style={{

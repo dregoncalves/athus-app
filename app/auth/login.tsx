@@ -25,6 +25,7 @@ import {
   User,
 } from '@react-native-google-signin/google-signin';
 import { loginWithGoogle } from '@/services/authService';
+import { LinearGradient } from 'expo-linear-gradient';
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -65,7 +66,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [focusedField, setFocusedField] = useState('');
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [eyeAnim] = useState(new Animated.Value(1));
@@ -228,6 +228,19 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </Link>
 
+          <Button
+            title={loading ? 'Entrando...' : 'Entrar'}
+            onPress={handleLogin}
+            loading={loading}
+            disabled={loading || !email || !password}
+            style={[
+              styles.loginButton,
+              (loading || !email || !password) && styles.loginButtonDisabled,
+            ]}
+            textStyle={styles.loginButtonText}
+            accessibilityLabel="Botão de entrar"
+          />
+
           {/* Google */}
           <View style={styles.orContainer}>
             <View style={styles.line} />
@@ -246,19 +259,6 @@ export default function LoginScreen() {
             />
             <Text style={styles.googleText}>Google</Text>
           </TouchableOpacity>
-
-          <Button
-            title={loading ? 'Entrando...' : 'Entrar'}
-            onPress={handleLogin}
-            loading={loading}
-            disabled={loading || !email || !password}
-            style={[
-              styles.loginButton,
-              (loading || !email || !password) && styles.loginButtonDisabled,
-            ]}
-            textStyle={styles.loginButtonText}
-            accessibilityLabel="Botão de entrar"
-          />
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Não tem uma conta?</Text>
@@ -287,13 +287,6 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   logo: { width: 120, height: 120, alignSelf: 'center', marginBottom: 32 },
-  title: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 26,
-    color: colors.secondary,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
@@ -305,7 +298,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.secondary,
+    color: colors.text,
     marginBottom: 2,
   },
   inputWrapper: {
@@ -313,8 +306,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 14,
     paddingHorizontal: 8,
-    backgroundColor: '#fff', // branco sempre
-    borderWidth: 2,
+    backgroundColor: '#fff',
+    borderWidth: 1,
     minHeight: 50,
   },
   input: {
@@ -323,14 +316,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: '#222', // texto preto
+    color: '#222',
     backgroundColor: 'transparent',
   },
   inputDefault: {
-    borderColor: colors.secondaryLight,
+    borderColor: colors.mediumGray,
   },
   inputFocused: {
     borderColor: colors.primary,
+    borderWidth: 2,
   },
   inputError: {
     borderColor: colors.danger,
@@ -368,10 +362,10 @@ const styles = StyleSheet.create({
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.secondaryLight,
+    backgroundColor: colors.lightGray,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.secondary,
+    borderColor: colors.mediumGray,
     paddingVertical: 10,
     justifyContent: 'center',
     marginBottom: 20,
@@ -380,7 +374,7 @@ const styles = StyleSheet.create({
   googleText: {
     fontFamily: 'Poppins-Medium',
     fontSize: 15,
-    color: colors.secondary,
+    color: colors.text,
   },
   loginButton: {
     backgroundColor: colors.primary,
@@ -390,10 +384,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginButtonDisabled: {
-    backgroundColor: colors.secondaryLight,
+    backgroundColor: colors.primaryBackgroundLight,
   },
   loginButtonText: {
-    color: colors.secondary,
+    color: colors.white,
     fontFamily: 'Poppins-Bold',
     fontSize: 16,
   },
