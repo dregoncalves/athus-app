@@ -1,4 +1,3 @@
-// app/auth/register.tsx
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import {
@@ -14,45 +13,24 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, router, useRouter } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Button } from '@/components/Button';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
-import { GoogleSignin, User } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { loginWithGoogle } from '@/services/authService';
-import { SignUpPayload } from "@/types/SignUpPayload";
+import { SignUpPayload } from '@/types/SignUpPayload';
 
 GoogleSignin.configure({
-  webClientId: "302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com",
+  webClientId: '302209231698-g4dsrnebsh66hc3j1rjtla69ikr6qa8v.apps.googleusercontent.com',
   offlineAccess: true,
 });
 
-async function handleGoogleRegister() {
-  try {
-    await GoogleSignin.hasPlayServices();
-    await GoogleSignin.signIn();
-    const userInfo = await GoogleSignin.signIn();
-    const { accessToken } = await GoogleSignin.getTokens();
-    console.log('USER:', userInfo);
-    console.log('TOKENS:', accessToken);
-
-    if (!accessToken) throw new Error("Não foi possível obter o accessToken do Google.");
-
-    await loginWithGoogle(accessToken);
-
-    Toast.show({ type: "success", text1: "Cadastro e login realizados com Google!" });
-    router.replace("/(tabs)");
-  } catch (error) {
-    console.error(error);
-    Toast.show({
-      type: "error",
-      text1: "Erro ao cadastrar com Google",
-      text2: "Tente novamente ou use outro método.",
-    });
-  }
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export default function RegisterScreen() {
@@ -65,26 +43,17 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Input focus/erro helpers
   const [focusedField, setFocusedField] = useState('');
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [eyeAnim] = useState(new Animated.Value(1));
   const [eyeAnim2] = useState(new Animated.Value(1));
 
-  const router = useRouter();
-  const { signUp } = useAuth();
-
-  // Refs para focar campos ao dar "next"
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
-  function isValidEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
+  const { signUp } = useAuth();
 
-  // Validação
   function validate() {
     const errs: { [k: string]: string } = {};
     if (!fullName) errs.fullName = 'Digite seu nome completo.';
@@ -98,7 +67,6 @@ export default function RegisterScreen() {
     return Object.keys(errs).length === 0;
   }
 
-  // Animação de bounce no botão olho
   function animateEye(eye: Animated.Value) {
     Animated.sequence([
       Animated.timing(eye, { toValue: 1.2, duration: 100, useNativeDriver: true }),
@@ -116,7 +84,6 @@ export default function RegisterScreen() {
         senha: password,
       };
       await signUp(payload);
-
       Toast.show({
         type: 'success',
         text1: 'Cadastro realizado!',
@@ -142,19 +109,27 @@ export default function RegisterScreen() {
     }
   };
 
+  async function handleGoogleRegister() {
+    try {
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signOut();
+      const userInfo = await GoogleSignin.signIn();
+      const { accessToken } = await GoogleSignin.getTokens();
+      if (!accessToken) throw new Error('Não foi possível obter o accessToken do Google.');
+      await loginWithGoogle(accessToken);
+      Toast.show({ type: 'success', text1: 'Cadastro e login realizados com Google!' });
+      router.replace('/(tabs)');
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao cadastrar com Google',
+        text2: 'Tente novamente ou use outro método.',
+      });
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerAbsolute}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-        >
-          <ArrowLeft size={24} color={colors.textDark} />
-        </TouchableOpacity>
-      </View>
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -164,26 +139,29 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.formWrapper}>
-            <Text style={styles.title}>Criar conta</Text>
-            <Text style={styles.subtitle}>
-              Crie sua conta para descobrir talentos na sua quebrada!
-            </Text>
+          {/* <Text style={styles.subtitle}>
+            Crie sua conta para descobrir talentos na sua quebrada!
+          </Text> */}
 
-            {/* Nome completo */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Nome completo</Text>
+          {/* Nome completo */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Nome completo</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                errors.fullName
+                  ? styles.inputError
+                  : focusedField === 'fullName'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
+              ]}
+            >
               <TextInput
-                style={[
-                  styles.input,
-                  errors.fullName ? styles.inputError : null,
-                  focusedField === 'fullName' ? styles.inputFocused : null,
-                ]}
+                style={styles.input}
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Digite seu nome completo"
                 autoCapitalize="words"
-                autoFocus
                 returnKeyType="next"
                 onSubmitEditing={() => emailRef.current?.focus()}
                 blurOnSubmit={false}
@@ -191,20 +169,28 @@ export default function RegisterScreen() {
                 accessibilityLabel="Nome completo"
                 onFocus={() => setFocusedField('fullName')}
                 onBlur={() => setFocusedField('')}
+                placeholderTextColor={colors.textLight}
               />
-              {errors.fullName && <Text style={styles.errorMsg}>{errors.fullName}</Text>}
             </View>
+            {errors.fullName && <Text style={styles.errorMsg}>{errors.fullName}</Text>}
+          </View>
 
-            {/* E-mail */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>E-mail</Text>
+          {/* E-mail */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>E-mail</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                errors.email
+                  ? styles.inputError
+                  : focusedField === 'email'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
+              ]}
+            >
               <TextInput
                 ref={emailRef}
-                style={[
-                  styles.input,
-                  errors.email ? styles.inputError : null,
-                  focusedField === 'email' ? styles.inputFocused : null,
-                ]}
+                style={styles.input}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Digite seu e-mail"
@@ -218,150 +204,172 @@ export default function RegisterScreen() {
                 accessibilityLabel="E-mail"
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
+                placeholderTextColor={colors.textLight}
               />
-              {errors.email && <Text style={styles.errorMsg}>{errors.email}</Text>}
             </View>
+            {errors.email && <Text style={styles.errorMsg}>{errors.email}</Text>}
+          </View>
 
-            {/* Senha */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Senha</Text>
-              <View style={[
-                styles.passwordContainer,
-                errors.password ? styles.inputError : null,
-                focusedField === 'password' ? styles.inputFocused : null,
-              ]}>
-                <TextInput
-                  ref={passwordRef}
-                  style={styles.passwordInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Digite sua senha"
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  returnKeyType="next"
-                  onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-                  blurOnSubmit={false}
-                  textContentType="newPassword"
-                  accessibilityLabel="Senha"
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField('')}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => {
-                    setShowPassword(!showPassword);
-                    animateEye(eyeAnim);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    showPassword ? 'Ocultar senha' : 'Mostrar senha'
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
-                    {showPassword ? (
-                      <EyeOff size={20} color={colors.textLight} />
-                    ) : (
-                      <Eye size={20} color={colors.textLight} />
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              </View>
-              {/* Dica de senha */}
-              <Text style={styles.passwordTip}>
-                Use pelo menos 6 caracteres. Combine letras e números para mais segurança.
-              </Text>
-              {errors.password && <Text style={styles.errorMsg}>{errors.password}</Text>}
-            </View>
-
-            {/* Confirmar senha */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Confirmar senha</Text>
-              <View style={[
-                styles.passwordContainer,
-                errors.confirmPassword ? styles.inputError : null,
-                focusedField === 'confirmPassword' ? styles.inputFocused : null,
-              ]}>
-                <TextInput
-                  ref={confirmPasswordRef}
-                  style={styles.passwordInput}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirme sua senha"
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                  onSubmitEditing={handleRegister}
-                  textContentType="newPassword"
-                  accessibilityLabel="Confirmar senha"
-                  onFocus={() => setFocusedField('confirmPassword')}
-                  onBlur={() => setFocusedField('')}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => {
-                    setShowConfirmPassword(!showConfirmPassword);
-                    animateEye(eyeAnim2);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Animated.View style={{ transform: [{ scale: eyeAnim2 }] }}>
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} color={colors.textLight} />
-                    ) : (
-                      <Eye size={20} color={colors.textLight} />
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              </View>
-              {errors.confirmPassword && <Text style={styles.errorMsg}>{errors.confirmPassword}</Text>}
-            </View>
-
-            {/* Botão de cadastro */}
-            <Button
-              title={loading ? "Cadastrando..." : "Cadastrar"}
-              onPress={handleRegister}
-              loading={loading}
-              disabled={
-                loading || !fullName || !email || !password || !confirmPassword
-              }
-              style={styles.registerButton}
-              accessibilityLabel="Botão de cadastro"
-              testID="register-btn"
-            />
-
-            {/* Alternativa: Google */}
-            <View style={styles.orContainer}>
-              <View style={styles.line} />
-              <Text style={styles.orText}>Ou cadastre-se com</Text>
-              <View style={styles.line} />
-            </View>
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={handleGoogleRegister}
-              activeOpacity={0.7}
-              accessibilityLabel="Cadastrar com Google"
+          {/* Senha */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Senha</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                errors.password
+                  ? styles.inputError
+                  : focusedField === 'password'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
+              ]}
             >
-              <Image
-                source={require('../../assets/images/google-logo.png')}
-                style={styles.googleIcon}
+              <TextInput
+                ref={passwordRef}
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Digite sua senha"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                blurOnSubmit={false}
+                textContentType="newPassword"
+                accessibilityLabel="Senha"
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField('')}
+                placeholderTextColor={colors.textLight}
               />
-              <Text style={styles.googleText}>Google</Text>
-            </TouchableOpacity>
-
-            {/* Link para login */}
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Já tem uma conta?</Text>
-              <Link href="/auth/login" asChild>
-                <TouchableOpacity accessibilityRole="button">
-                  <Text style={styles.loginLink}>Faça login</Text>
-                </TouchableOpacity>
-              </Link>
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => {
+                  setShowPassword(!showPassword);
+                  animateEye(eyeAnim);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                activeOpacity={0.8}
+              >
+                <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
+                  {showPassword ? (
+                    <EyeOff size={20} color={colors.primary} />
+                  ) : (
+                    <Eye size={20} color={colors.primary} />
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
             </View>
+            <Text style={styles.passwordTip}>
+              Use pelo menos 6 caracteres. Combine letras e números para mais segurança.
+            </Text>
+            {errors.password && <Text style={styles.errorMsg}>{errors.password}</Text>}
+          </View>
+
+          {/* Confirmar senha */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Confirmar senha</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                errors.confirmPassword
+                  ? styles.inputError
+                  : focusedField === 'confirmPassword'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
+              ]}
+            >
+              <TextInput
+                ref={confirmPasswordRef}
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirme sua senha"
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                returnKeyType="done"
+                onSubmitEditing={handleRegister}
+                textContentType="newPassword"
+                accessibilityLabel="Confirmar senha"
+                onFocus={() => setFocusedField('confirmPassword')}
+                onBlur={() => setFocusedField('')}
+                placeholderTextColor={colors.textLight}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => {
+                  setShowConfirmPassword(!showConfirmPassword);
+                  animateEye(eyeAnim2);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                activeOpacity={0.8}
+              >
+                <Animated.View style={{ transform: [{ scale: eyeAnim2 }] }}>
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} color={colors.primary} />
+                  ) : (
+                    <Eye size={20} color={colors.primary} />
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
+            {errors.confirmPassword && (
+              <Text style={styles.errorMsg}>{errors.confirmPassword}</Text>
+            )}
+          </View>
+
+          <Button
+            title={loading ? 'Cadastrando...' : 'Cadastrar'}
+            onPress={handleRegister}
+            loading={loading}
+            disabled={
+              loading ||
+              !fullName ||
+              !email ||
+              !password ||
+              !confirmPassword
+            }
+            style={[
+              styles.loginButton, // usa o mesmo do login
+              (loading ||
+                !fullName ||
+                !email ||
+                !password ||
+                !confirmPassword) &&
+                styles.loginButtonDisabled,
+            ]}
+            textStyle={styles.loginButtonText}
+            accessibilityLabel="Botão de cadastro"
+            testID="register-btn"
+          />
+
+          {/* Google */}
+          <View style={styles.orContainer}>
+            <View style={styles.line} />
+            <Text style={styles.orText}>Ou cadastre-se com</Text>
+            <View style={styles.line} />
+          </View>
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleRegister}
+            activeOpacity={0.7}
+            accessibilityLabel="Cadastrar com Google"
+          >
+            <Image
+              source={require('../../assets/images/google-logo.png')}
+              style={styles.googleIcon}
+            />
+            <Text style={styles.googleText}>Google</Text>
+          </TouchableOpacity>
+
+          {/* Link para login */}
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Já tem uma conta?</Text>
+            <Link href="/auth/login" asChild>
+              <TouchableOpacity accessibilityRole="button">
+                <Text style={styles.registerLink}>Faça login</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -369,109 +377,90 @@ export default function RegisterScreen() {
   );
 }
 
+// Mesmo style do login!
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  keyboardAvoidingView: { flex: 1 },
-  headerAbsolute: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    zIndex: 10,
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 36 : 16,
-    paddingBottom: 8,
+  container: {
+    flex: 1,
     backgroundColor: colors.background,
-    // Optional: Adicione sombra se quiser destacar o topo
-    // shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }
   },
-  backButton: { alignSelf: 'flex-start' },
+  keyboardAvoidingView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 4,
+    paddingBottom: 24,
   },
-  formWrapper: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 24,
-    elevation: 2,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
-    marginTop: 12,
-    marginBottom: 24,
-  },
-  title: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 26,
-    color: colors.textDark,
-    marginBottom: 2,
-    textAlign: 'center'
-  },
+  logo: { width: 120, height: 120, alignSelf: 'center', marginBottom: 32 },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
-    marginBottom: 8,
-    textAlign: 'center'
+    marginBottom: 18,
+    textAlign: 'center',
   },
   inputContainer: { marginBottom: 16 },
   inputLabel: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.textDark,
-    marginBottom: 8,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    minHeight: 50,
   },
   input: {
+    flex: 1,
     height: 50,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: colors.textDark,
+    color: '#222',
+    backgroundColor: 'transparent',
+  },
+  inputDefault: {
+    borderColor: colors.mediumGray,
   },
   inputFocused: {
     borderColor: colors.primary,
-    backgroundColor: '#F0F6FF',
+    borderWidth: 2,
   },
   inputError: {
-    borderColor: colors.danger || '#c00',
+    borderColor: colors.danger,
   },
   errorMsg: {
-    color: colors.danger || '#c00',
+    color: colors.danger,
     fontSize: 13,
     marginTop: 2,
     marginLeft: 2,
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    height: 50,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  passwordInput: {
-    flex: 1,
-    height: '100%',
-    paddingHorizontal: 16,
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: colors.textDark,
-  },
-  eyeIcon: { padding: 12 },
+  eyeIcon: { padding: 10 },
   passwordTip: {
     fontSize: 12,
     color: colors.textLight,
     marginTop: 4,
     marginLeft: 2,
   },
-  registerButton: { marginTop: 8, marginBottom: 22 },
+  loginButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    marginBottom: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  loginButtonDisabled: {
+    backgroundColor: colors.primaryBackgroundLight,
+  },
+  loginButtonText: {
+    color: colors.white,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+  },
   orContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -492,10 +481,10 @@ const styles = StyleSheet.create({
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.lightGray,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.lightGray,
+    borderColor: colors.mediumGray,
     paddingVertical: 10,
     justifyContent: 'center',
     marginBottom: 20,
@@ -504,22 +493,22 @@ const styles = StyleSheet.create({
   googleText: {
     fontFamily: 'Poppins-Medium',
     fontSize: 15,
-    color: colors.textDark,
+    color: colors.text,
   },
-  loginContainer: {
+  registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 6,
   },
-  loginText: {
+  registerText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.textLight,
     marginRight: 4,
   },
-  loginLink: {
+  registerLink: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.secondary,
+    color: colors.primary,
   },
 });

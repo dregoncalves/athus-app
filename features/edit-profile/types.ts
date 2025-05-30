@@ -1,3 +1,4 @@
+// register/types.ts
 export interface RegisterFormData {
   nome: string;
   email: string;

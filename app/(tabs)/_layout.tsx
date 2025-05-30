@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Chrome as Home, User, Bell, Menu, House } from 'lucide-react-native';
+import { House, User } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 
 export default function TabLayout() {
@@ -20,6 +20,8 @@ export default function TabLayout() {
         tabBarLabelStyle: styles.tabBarLabel,
         headerShown: false,
         tabBarShowLabel: true,
+        tabBarPressColor: 'transparent', // aqui remove o ripple
+        tabBarPressOpacity: 1,           // aqui remove o fade
       }}
     >
       <Tabs.Screen
@@ -30,24 +32,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications"
-        options={{
-          title: 'Notificações',
-          tabBarIcon: ({ color, size }) => <Bell size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: 'Mais',
-          tabBarIcon: ({ color, size }) => <Menu size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -23,9 +23,9 @@ import { usePublicRoute } from '@/hooks/usePublicRoute';
 import {
   GoogleSignin,
   User,
-  isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { loginWithGoogle } from '@/services/authService';
+import { LinearGradient } from 'expo-linear-gradient';
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -45,9 +45,7 @@ export default function LoginScreen() {
       await GoogleSignin.hasPlayServices();
       await GoogleSignin.signOut();
       const userInfo = await GoogleSignin.signIn();
-      const { accessToken, idToken } = await GoogleSignin.getTokens();
-      console.log('USER:', userInfo);
-      console.log('TOKENS:', accessToken);
+      const { accessToken } = await GoogleSignin.getTokens();
       if (!accessToken)
         throw new Error('Não foi possível obter o accessToken do Google.');
       await loginWithGoogle(accessToken);
@@ -68,14 +66,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [focusedField, setFocusedField] = useState('');
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [eyeAnim] = useState(new Animated.Value(1));
   const passwordRef = useRef<TextInput>(null);
   const { login } = useAuth();
 
-  // Validação
   function validate() {
     const errs: { [k: string]: string } = {};
     if (!email) errs.email = 'Digite seu e-mail.';
@@ -85,7 +81,6 @@ export default function LoginScreen() {
     return Object.keys(errs).length === 0;
   }
 
-  // Animação do olho
   function animateEye() {
     Animated.sequence([
       Animated.timing(eyeAnim, {
@@ -106,7 +101,6 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email, password);
-      // Redirecionamento pelo AuthContext
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -128,32 +122,36 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* FORMULÁRIO CENTRALIZADO COM SOMBRA */}
-          <View style={styles.formWrapper}>
-            <Image
-              source={require('../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-              accessible
-              accessibilityLabel="Logo Athus"
-            />
-            <Text style={styles.title}>Entrar</Text>
-            <Text style={styles.subtitle}>
-              Acesse sua conta para encontrar serviços
-            </Text>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+            accessible
+            accessibilityLabel="Logo Athus"
+          />
+          <Text style={styles.subtitle}>
+            Acesse sua conta para encontrar serviços
+          </Text>
 
-            {/* E-mail */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>E-mail</Text>
+          {/* E-mail */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>E-mail</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                errors.email
+                  ? styles.inputError
+                  : focusedField === 'email'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
+              ]}
+            >
               <TextInput
-                style={[
-                  styles.input,
-                  errors.email ? styles.inputError : null,
-                  focusedField === 'email' ? styles.inputFocused : null,
-                ]}
+                style={styles.input}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Digite seu e-mail"
+                placeholderTextColor={colors.textLight}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -165,107 +163,110 @@ export default function LoginScreen() {
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
               />
-              {errors.email && (
-                <Text style={styles.errorMsg}>{errors.email}</Text>
-              )}
             </View>
+            {errors.email && (
+              <Text style={styles.errorMsg}>{errors.email}</Text>
+            )}
+          </View>
 
-            {/* Senha */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Senha</Text>
-              <View
-                style={[
-                  styles.passwordContainer,
-                  errors.password ? styles.inputError : null,
-                  focusedField === 'password' ? styles.inputFocused : null,
-                ]}
-              >
-                <TextInput
-                  ref={passwordRef}
-                  style={styles.passwordInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Digite sua senha"
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                  onSubmitEditing={handleLogin}
-                  textContentType="password"
-                  accessibilityLabel="Campo de senha"
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField('')}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => {
-                    setShowPassword(!showPassword);
-                    animateEye();
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    showPassword ? 'Ocultar senha' : 'Mostrar senha'
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
-                    {showPassword ? (
-                      <EyeOff size={20} color={colors.textLight} />
-                    ) : (
-                      <Eye size={20} color={colors.textLight} />
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              </View>
-              {errors.password && (
-                <Text style={styles.errorMsg}>{errors.password}</Text>
-              )}
-            </View>
-
-            <Link href="/auth/forgot-password" asChild>
+          {/* Senha */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Senha</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                errors.password
+                  ? styles.inputError
+                  : focusedField === 'password'
+                  ? styles.inputFocused
+                  : styles.inputDefault,
+              ]}
+            >
+              <TextInput
+                ref={passwordRef}
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Digite sua senha"
+                placeholderTextColor={colors.textLight}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+                textContentType="password"
+                accessibilityLabel="Campo de senha"
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField('')}
+              />
               <TouchableOpacity
-                style={styles.forgotPasswordButton}
+                style={styles.eyeIcon}
+                onPress={() => {
+                  setShowPassword(!showPassword);
+                  animateEye();
+                }}
                 accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                activeOpacity={0.8}
               >
-                <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+                <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>
+                  {showPassword ? (
+                    <EyeOff size={20} color={colors.primary} />
+                  ) : (
+                    <Eye size={20} color={colors.primary} />
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
+            {errors.password && (
+              <Text style={styles.errorMsg}>{errors.password}</Text>
+            )}
+          </View>
+
+          <Link href="/auth/forgot-password" asChild>
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+          </Link>
+
+          <Button
+            title={loading ? 'Entrando...' : 'Entrar'}
+            onPress={handleLogin}
+            loading={loading}
+            disabled={loading || !email || !password}
+            style={[
+              styles.loginButton,
+              (loading || !email || !password) && styles.loginButtonDisabled,
+            ]}
+            textStyle={styles.loginButtonText}
+            accessibilityLabel="Botão de entrar"
+          />
+
+          {/* Google */}
+          <View style={styles.orContainer}>
+            <View style={styles.line} />
+            <Text style={styles.orText}>Ou entre com</Text>
+            <View style={styles.line} />
+          </View>
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            activeOpacity={0.7}
+            accessibilityLabel="Entrar com Google"
+          >
+            <Image
+              source={require('../../assets/images/google-logo.png')}
+              style={styles.googleIcon}
+            />
+            <Text style={styles.googleText}>Google</Text>
+          </TouchableOpacity>
+
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Não tem uma conta?</Text>
+            <Link href="/auth/register" asChild>
+              <TouchableOpacity>
+                <Text style={styles.registerLink}>Crie uma!</Text>
               </TouchableOpacity>
             </Link>
-
-            {/* Google */}
-            <View style={styles.orContainer}>
-              <View style={styles.line} />
-              <Text style={styles.orText}>Ou entre com</Text>
-              <View style={styles.line} />
-            </View>
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={handleGoogleSignIn}
-              activeOpacity={0.7}
-              accessibilityLabel="Entrar com Google"
-            >
-              <Image
-                source={require('../../assets/images/google-logo.png')}
-                style={styles.googleIcon}
-              />
-              <Text style={styles.googleText}>Google</Text>
-            </TouchableOpacity>
-
-            <Button
-              title={loading ? 'Entrando...' : 'Entrar'}
-              onPress={handleLogin}
-              loading={loading}
-              disabled={loading || !email || !password}
-              style={styles.loginButton}
-              accessibilityLabel="Botão de entrar"
-            />
-
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Não tem uma conta?</Text>
-              <Link href="/auth/register" asChild>
-                <TouchableOpacity accessibilityRole="button">
-                  <Text style={styles.registerLink}>Crie uma!</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -274,7 +275,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   keyboardAvoidingView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
@@ -282,26 +286,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 24,
   },
-  formWrapper: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 24,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    marginTop: 24,
-    marginBottom: 24,
-  },
-  logo: { width: 120, height: 40, alignSelf: 'center', marginBottom: 8 },
-  title: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 26,
-    color: colors.textDark,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
+  logo: { width: 120, height: 120, alignSelf: 'center', marginBottom: 32 },
   subtitle: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
@@ -313,51 +298,44 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.textDark,
-    marginBottom: 8,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    minHeight: 50,
   },
   input: {
+    flex: 1,
     height: 50,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: colors.textDark,
+    color: '#222',
+    backgroundColor: 'transparent',
+  },
+  inputDefault: {
+    borderColor: colors.mediumGray,
   },
   inputFocused: {
     borderColor: colors.primary,
-    backgroundColor: '#F0F6FF',
+    borderWidth: 2,
   },
   inputError: {
-    borderColor: colors.danger || '#c00',
+    borderColor: colors.danger,
   },
   errorMsg: {
-    color: colors.danger || '#c00',
+    color: colors.danger,
     fontSize: 13,
     marginTop: 2,
     marginLeft: 2,
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    height: 50,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  passwordInput: {
-    flex: 1,
-    height: '100%',
-    paddingHorizontal: 16,
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: colors.textDark,
-  },
-  eyeIcon: { padding: 12 },
+  eyeIcon: { padding: 10 },
   forgotPasswordButton: { alignSelf: 'flex-end', marginBottom: 12 },
   forgotPasswordText: {
     fontFamily: 'Poppins-Regular',
@@ -384,10 +362,10 @@ const styles = StyleSheet.create({
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.lightGray,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.lightGray,
+    borderColor: colors.mediumGray,
     paddingVertical: 10,
     justifyContent: 'center',
     marginBottom: 20,
@@ -396,9 +374,23 @@ const styles = StyleSheet.create({
   googleText: {
     fontFamily: 'Poppins-Medium',
     fontSize: 15,
-    color: colors.textDark,
+    color: colors.text,
   },
-  loginButton: { marginBottom: 18 },
+  loginButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    marginBottom: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  loginButtonDisabled: {
+    backgroundColor: colors.primaryBackgroundLight,
+  },
+  loginButtonText: {
+    color: colors.white,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+  },
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -413,6 +405,6 @@ const styles = StyleSheet.create({
   registerLink: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.secondary,
+    color: colors.primary,
   },
 });

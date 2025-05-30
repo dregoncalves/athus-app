@@ -1,13 +1,29 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
 import { colors } from '@/constants/colors';
-import { User, MapPin, Settings, CircleHelp as HelpCircle, LogOut } from 'lucide-react-native';
+import {
+  User,
+  MapPin,
+  Settings,
+  CircleHelp as HelpCircle,
+  LogOut,
+} from 'lucide-react-native';
 import { ProfileMenuItem } from '@/components/ProfileMenuItem';
 import { AuthContext } from '@/context/AuthContext';
 import api from '@/services/api';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useRouter } from 'expo-router';
 
 async function getUser(id: string) {
   const response = await api.get(`/usuarios/${id}`);
@@ -16,6 +32,7 @@ async function getUser(id: string) {
 
 export default function ProfileScreen() {
   const { user, logout } = useContext(AuthContext);
+  const router = useRouter();
 
   const [userData, setUserData] = useState<any | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -27,7 +44,7 @@ export default function ProfileScreen() {
         const data = await getUser(user.id);
         setUserData(data);
       } catch (error) {
-        Alert.alert("Erro", "Não foi possível carregar os dados do perfil.");
+        Alert.alert('Erro', 'Não foi possível carregar os dados do perfil.');
       } finally {
         setLoadingProfile(false);
       }
@@ -38,21 +55,17 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     await GoogleSignin.signOut();
-    Alert.alert(
-      "Sair",
-      "Deseja realmente sair da sua conta?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Sair", style: "destructive", onPress: () => logout() }
-      ]
-    );
-  };
+    Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => logout() },
+    ]);
+  }
 
-  const nome = userData?.nome || user?.nome || "Usuário Teste";
-  const email = userData?.email || user?.email || "user.test@email.com";
+  const nome = userData?.nome || user?.nome || 'Usuário Teste';
+  const email = userData?.email || user?.email || 'user.test@email.com';
   const location = userData?.cidade
     ? `${userData.cidade}, ${userData.estado}`
-    : "Curitiba, PR";
+    : 'Curitiba, PR';
   const imageUrl = userData?.imagemPerfil || '';
 
   return (
@@ -62,7 +75,11 @@ export default function ProfileScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           {loadingProfile ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginBottom: 24 }} />
+            <ActivityIndicator
+              size="large"
+              color={colors.primary}
+              style={{ marginBottom: 24 }}
+            />
           ) : imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.profileImage} />
           ) : (
@@ -79,7 +96,10 @@ export default function ProfileScreen() {
             <Text style={styles.locationText}>{location}</Text>
           </View>
 
-          <TouchableOpacity style={styles.editProfileButton}>
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={() => router.push('/profile/edit')}
+          >
             <Text style={styles.editProfileButtonText}>Editar Perfil</Text>
           </TouchableOpacity>
         </View>

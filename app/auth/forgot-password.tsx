@@ -9,16 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
-import { Button } from '@/components/Button';
 import { ArrowLeft } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
 
-// Função simples para validar e-mail
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -28,27 +27,27 @@ export default function ForgotPasswordScreen() {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const emailRef = useRef<TextInput>(null);
   const router = useRouter();
 
+  const hasError =
+    submitted && (!email ? 'Informe o e-mail.' : !isValidEmail(email) ? 'Digite um e-mail válido.' : '');
+
   const handleSendCode = async () => {
-    if (!email) {
-      Toast.show({
-        type: 'error',
-        text1: 'Informe o e-mail.',
-      });
-      return;
-    }
-    if (!isValidEmail(email)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Digite um e-mail válido.',
-      });
+    setSubmitted(true);
+    if (!email || !isValidEmail(email)) {
+      // Erro já tratado visualmente
+      if (!email) {
+        Toast.show({ type: 'error', text1: 'Informe o e-mail.' });
+      } else {
+        Toast.show({ type: 'error', text1: 'Digite um e-mail válido.' });
+      }
       return;
     }
     setLoading(true);
     try {
-      // Request para /auth/esqueci-senha
       // await AuthService.forgotPassword(email);
       await new Promise((resolve) => setTimeout(resolve, 1200));
       Toast.show({
@@ -93,30 +92,50 @@ export default function ForgotPasswordScreen() {
               <Text style={styles.inputLabel}>E-mail</Text>
               <TextInput
                 ref={emailRef}
-                style={styles.input}
+                style={[
+                  styles.input,
+                  hasError
+                    ? styles.inputError
+                    : focused
+                    ? styles.inputFocused
+                    : styles.inputDefault,
+                ]}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Digite seu e-mail"
+                placeholderTextColor={colors.textLight}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
                 autoFocus
                 returnKeyType="done"
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 onSubmitEditing={handleSendCode}
                 accessibilityLabel="E-mail"
               />
-              {email.length > 0 && !isValidEmail(email) && (
-                <Text style={styles.errorText}>Digite um e-mail válido.</Text>
-              )}
+              {hasError ? (
+                <Text style={styles.errorText}>{hasError}</Text>
+              ) : null}
             </View>
 
-            <Button
-              title="Enviar código"
+            <TouchableOpacity
+              style={[
+                styles.button,
+                (!email || !isValidEmail(email) || loading) && styles.buttonDisabled,
+              ]}
               onPress={handleSendCode}
-              loading={loading}
               disabled={loading || !email || !isValidEmail(email)}
-              style={styles.button}
-            />
+              accessibilityRole="button"
+              accessibilityLabel="Enviar código"
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Enviar código</Text>
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.loginLinkContainer}
@@ -139,16 +158,71 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
   backButton: { marginTop: 16, marginBottom: 16, alignSelf: 'flex-start' },
   content: { flex: 1, justifyContent: 'center' },
-  title: { fontFamily: 'Poppins-Bold', fontSize: 28, color: colors.textDark, marginBottom: 8 },
-  subtitle: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textLight, marginBottom: 32 },
-  inputContainer: { marginBottom: 20 },
-  inputLabel: { fontFamily: 'Poppins-Medium', fontSize: 14, color: colors.textDark, marginBottom: 8 },
-  input: {
-    height: 50, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.lightGray,
-    borderRadius: 8, paddingHorizontal: 16, fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textDark,
+  title: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 28,
+    color: colors.textDark,
+    marginBottom: 8,
   },
-  errorText: { color: colors.danger || '#c00', fontFamily: 'Poppins-Regular', marginTop: 6, marginLeft: 2 },
-  button: { marginTop: 8, marginBottom: 24 },
+  subtitle: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 32,
+  },
+  inputContainer: { marginBottom: 20 },
+  inputLabel: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 14,
+    color: colors.textDark,
+    marginBottom: 8,
+  },
+  input: {
+    height: 50,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.textDark,
+  },
+  inputDefault: {
+    borderColor: colors.mediumGray,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+  },
+  inputError: {
+    borderColor: colors.danger,
+  },
+  errorText: {
+    color: colors.danger,
+    fontFamily: 'Poppins-Regular',
+    marginTop: 6,
+    marginLeft: 2,
+    fontSize: 13,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  buttonDisabled: {
+    backgroundColor: colors.primaryLight,
+  },
+  buttonText: {
+    color: colors.white,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+  },
   loginLinkContainer: { alignItems: 'center', marginTop: 12 },
-  loginLinkText: { fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.primary },
+  loginLinkText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: colors.primary,
+  },
 });

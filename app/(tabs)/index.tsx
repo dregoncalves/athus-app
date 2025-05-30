@@ -9,6 +9,7 @@ import { colors } from '@/constants/colors';
 import { mockServiceProviders } from '@/data/mockData';
 import { ChevronLeft, ChevronRight, Wrench, Scissors, Home, Brush, Car, Book, Heart, Coffee, ShoppingBag, Laptop } from 'lucide-react-native';
 import { ServiceProviderCard } from '@/components/ServiceProviderCard';
+import { StatusBar } from 'expo-status-bar';
 
 const categories = [
   { id: '1', name: 'Manutenção', icon: Wrench },
@@ -64,6 +65,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Text style={styles.welcomeText}>Olá, Usuário!</Text>
@@ -73,7 +75,7 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/profile')}
         >
           <Image 
-            source={{ uri: '' }}
+            // source={{ uri: '' }}
             style={styles.profileImage}
           />
         </TouchableOpacity>
