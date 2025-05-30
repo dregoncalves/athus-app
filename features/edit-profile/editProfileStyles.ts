@@ -1,42 +1,45 @@
-// /register/registerStyles.ts
+// features/edit-profile/editProfileStyles.ts
 import { StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
 
-export const registerStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  keyboardAvoidingView: { flex: 1 },
-  header: {
-    paddingBottom: 8,
-    zIndex: 2,
+export const editProfileStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  backButton: { alignSelf: 'flex-start' },
-  logoContainer: { alignItems: 'center', marginBottom: 8, marginTop: 8 },
-  logo: { width: 120, height: 40 },
   scroll: {
-    flexGrow: 1,
     paddingHorizontal: 24,
     paddingBottom: 40,
-    justifyContent: 'center',
   },
-  formContainer: { flex: 1 },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
     fontFamily: 'Poppins-Bold',
-    fontSize: 28,
+    fontSize: 26,
     color: colors.black,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: colors.black,
+    marginTop: 16,
     marginBottom: 24,
+    textAlign: 'center',
   },
-  inputContainer: { marginBottom: 16 },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 18,
+    color: colors.black,
+    marginBottom: 16,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
   inputLabel: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
     color: colors.black,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   input: {
     height: 50,
@@ -49,53 +52,75 @@ export const registerStyles = StyleSheet.create({
     fontSize: 14,
     color: colors.black,
   },
-  passwordContainer: {
-    flexDirection: 'row',
+  disabledInput: {
+    backgroundColor: colors.lightGray,
     height: 50,
-    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.lightGray,
     borderRadius: 8,
-    alignItems: 'center',
-  },
-  passwordInput: {
-    flex: 1,
-    height: '100%',
     paddingHorizontal: 16,
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: colors.black,
   },
-  eyeIcon: { padding: 12 },
-  registerButton: { 
-    marginTop: 8, 
-    marginBottom: 24,
-    backgroundColor: colors.secondary,
+  errorText: {
+    color: colors.danger,
+    fontSize: 13,
+    marginTop: 4,
+    fontFamily: 'Poppins-Regular',
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
   },
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
+  submitButtonText: {
+    color: '#fff',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 16,
   },
-  loginText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: colors.textLight,
-    marginRight: 4,
+  toggleButton: {
+    backgroundColor: colors.lightGray,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  loginLink: {
+  toggleButtonText: {
     fontFamily: 'Poppins-Medium',
     fontSize: 14,
-    color: colors.secondary,
+    color: colors.black,
   },
-  errorText: {
-    color: colors.danger || '#c00',
-    marginTop: 4,
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  eyeIcon: {
+    padding: 10,
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  checkIcon: {
+    position: 'absolute',
+    right: 12,
+  },
+  inputWrapper: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  checkIconInside: {
+    position: 'absolute',
+    right: 16,
+    top: 14,
+    zIndex: 1,
+  },
+  inputValid: {
+    borderColor: colors.success,
+    borderWidth: 2,
   },
 });
