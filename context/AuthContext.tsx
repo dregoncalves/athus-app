@@ -1,11 +1,11 @@
 // /context/AuthContext.tsx
-import React, { createContext, useEffect, useState, ReactNode } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
-import * as AuthService from "../services/authService";
-import { User } from "@/types/User";
+import React, { createContext, useEffect, useState, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
+import * as AuthService from '../services/authService';
+import api from '../services/api';
+import { User } from '@/types/User';
 
-// ATUALIZE SUA INTERFACE:
 interface AuthContextData {
   user: User | null;
   loading: boolean;
@@ -13,10 +13,13 @@ interface AuthContextData {
   logout: () => Promise<void>;
   signUp: (payload: any) => Promise<void>;
   verifyEmail: (email: string, codigo: string) => Promise<void>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>; // <- Adiciona aqui
+  loginWithGoogle: (accessToken: string) => Promise<void>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+export const AuthContext = createContext<AuthContextData>(
+  {} as AuthContextData
+);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,65 +29,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadStorageData();
   }, []);
 
-  // Carrega o usuário do AsyncStorage
+  // Carrega o usuário do backend usando apenas o token
   const loadStorageData = async () => {
     try {
-      const token = await AsyncStorage.getItem("authToken");
-      const userData = await AsyncStorage.getItem("user");
-      if (token && userData) {
-        setUser(JSON.parse(userData));
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        const response = await api.get('/usuarios/logado');
+        setUser(response.data.body);
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.body));
       }
     } catch (error) {
-      console.error("Erro ao carregar dados do usuário", error);
+      setUser(null);
+      await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem('refreshToken');
     } finally {
       setLoading(false);
     }
   };
 
-  // Login
+  // Login tradicional (e-mail/senha)
   const login = async (email: string, senha: string) => {
     const data = await AuthService.login(email, senha);
 
-    // Aqui o backend deve retornar TODOS os campos do User!
-    const user: User = {
-      id: data.body.id,
-      nome: data.body.nome,
-      email: data.body.email,
-      telefone: data.body.telefone,
-      cpf: data.body.cpf,
-      dataNascimento: data.body.dataNascimento,
-      pais: data.body.pais,
-      estado: data.body.estado,
-      cidade: data.body.cidade,
-      cep: data.body.cep,
-      rua: data.body.rua,
-      numero: data.body.numero,
-      apartamento: data.body.apartamento,
-      logradouro: data.body.logradouro,
-      imagemPerfil: data.body.imagemPerfil,
-      ativo: data.body.ativo,
-      prestadorServico: data.body.prestadorServico,
-    };
-    setUser(user);
-    await AsyncStorage.setItem("authToken", data.body.accessToken);
-    await AsyncStorage.setItem("refreshToken", data.body.refreshToken);
-    await AsyncStorage.setItem("user", JSON.stringify(user));
-    router.replace("/(tabs)");
+    // Salva os tokens primeiro!
+    await AsyncStorage.setItem('authToken', data.body.accessToken);
+    await AsyncStorage.setItem('refreshToken', data.body.refreshToken);
+
+    // Agora busca o usuário logado
+    const response = await api.get('/usuarios/logado');
+    setUser(response.data.body);
+
+    await AsyncStorage.setItem('user', JSON.stringify(response.data.body));
+    router.replace('/(tabs)');
   };
 
-  // Logout global seguro
+  // Login com Google
+  const loginWithGoogle = async (googleAccessToken: string) => {
+    // Faz login na API usando o token do Google
+    const data = await AuthService.loginWithGoogle(googleAccessToken);
+
+    // Salva os tokens do backend (cobre diferentes estruturas de retorno)
+    if (data.body?.accessToken && data.body?.refreshToken) {
+      await AsyncStorage.setItem('authToken', data.body.accessToken);
+      await AsyncStorage.setItem('refreshToken', data.body.refreshToken);
+    } else if (data.token && data.refreshToken) {
+      await AsyncStorage.setItem('authToken', data.token);
+      await AsyncStorage.setItem('refreshToken', data.refreshToken);
+    }
+
+    // Busca o usuário logado
+    const response = await api.get('/usuarios/logado');
+    setUser(response.data.body);
+
+    await AsyncStorage.setItem('user', JSON.stringify(response.data.body));
+    router.replace('/(tabs)');
+  };
+
   const logout = async () => {
     await AuthService.logout();
     setUser(null);
-    router.replace("/auth/login");
+    router.replace('/auth/login');
   };
 
-  // Cadastro com payload completo
   const signUp = async (payload: any) => {
     await AuthService.signUp(payload);
   };
 
-  // Verificação de e-mail
   const verifyEmail = async (email: string, codigo: string) => {
     await AuthService.verifyEmail(email, codigo);
   };
@@ -98,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         signUp,
         verifyEmail,
+        loginWithGoogle, // agora disponível no contexto
         setUser,
       }}
     >

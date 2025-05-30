@@ -1,3 +1,4 @@
+// services/userService.ts
 import api from "./api";
 import { User } from "@/types/User"; // Ajuste o path
 

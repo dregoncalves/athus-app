@@ -20,12 +20,8 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from 'react-native-toast-message';
 import { usePublicRoute } from '@/hooks/usePublicRoute';
-import {
-  GoogleSignin,
-  User,
-} from '@react-native-google-signin/google-signin';
+import { GoogleSignin, User } from '@react-native-google-signin/google-signin';
 import { loginWithGoogle } from '@/services/authService';
-import { LinearGradient } from 'expo-linear-gradient';
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -38,7 +34,7 @@ GoogleSignin.configure({
 });
 
 export default function LoginScreen() {
-  const [auth, setAuth] = useState<User | null>(null);
+  const { loginWithGoogle } = useAuth(); // <-- pega do contexto
 
   async function handleGoogleSignIn() {
     try {
@@ -48,9 +44,9 @@ export default function LoginScreen() {
       const { accessToken } = await GoogleSignin.getTokens();
       if (!accessToken)
         throw new Error('Não foi possível obter o accessToken do Google.');
-      await loginWithGoogle(accessToken);
+
+      await loginWithGoogle(accessToken); // <-- agora chama o CONTEXTO!
       Toast.show({ type: 'success', text1: 'Login realizado com Google!' });
-      router.replace('/(tabs)');
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -205,7 +201,9 @@ export default function LoginScreen() {
                   animateEye();
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                accessibilityLabel={
+                  showPassword ? 'Ocultar senha' : 'Mostrar senha'
+                }
                 activeOpacity={0.8}
               >
                 <Animated.View style={{ transform: [{ scale: eyeAnim }] }}>

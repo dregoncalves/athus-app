@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
 import { colors } from '@/constants/colors';
 import {
-  User,
+  User as UserIcon,
   MapPin,
   Settings,
   CircleHelp as HelpCircle,
@@ -21,37 +21,12 @@ import {
 } from 'lucide-react-native';
 import { ProfileMenuItem } from '@/components/ProfileMenuItem';
 import { AuthContext } from '@/context/AuthContext';
-import api from '@/services/api';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 
-async function getUser(id: string) {
-  const response = await api.get(`/usuarios/${id}`);
-  return response.data;
-}
-
 export default function ProfileScreen() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, loading, logout } = useContext(AuthContext);
   const router = useRouter();
-
-  const [userData, setUserData] = useState<any | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        if (!user?.id) return setLoadingProfile(false);
-        const data = await getUser(user.id);
-        setUserData(data);
-      } catch (error) {
-        Alert.alert('Erro', 'Não foi possível carregar os dados do perfil.');
-      } finally {
-        setLoadingProfile(false);
-      }
-    }
-
-    fetchProfile();
-  }, [user?.id]);
 
   async function handleLogout() {
     await GoogleSignin.signOut();
@@ -61,12 +36,41 @@ export default function ProfileScreen() {
     ]);
   }
 
-  const nome = userData?.nome || user?.nome || 'Usuário Teste';
-  const email = userData?.email || user?.email || 'user.test@email.com';
-  const location = userData?.cidade
-    ? `${userData.cidade}, ${userData.estado}`
-    : 'Curitiba, PR';
-  const imageUrl = userData?.imagemPerfil || '';
+  // Mostra loader enquanto carrega o user
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Perfil" showBackButton={false} />
+        <View
+          style={[styles.profileSection, { flex: 1, justifyContent: 'center' }]}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Só mostra mensagem de erro SE terminou de carregar e realmente não existe user
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Perfil" showBackButton={false} />
+        <View
+          style={[styles.profileSection, { flex: 1, justifyContent: 'center' }]}
+        >
+          <Text style={styles.profileName}>Usuário não encontrado</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const nome = user.nome || 'Usuário Teste';
+  const email = user.email || 'user.test@email.com';
+  const location =
+    user.cidade && user.estado
+      ? `${user.cidade}, ${user.estado}`
+      : 'Curitiba, PR';
+  const imageUrl = user.imagemPerfil || '';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,17 +78,11 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
-          {loadingProfile ? (
-            <ActivityIndicator
-              size="large"
-              color={colors.primary}
-              style={{ marginBottom: 24 }}
-            />
-          ) : imageUrl ? (
+          {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.profileImage} />
           ) : (
             <View style={styles.profileImagePlaceholder}>
-              <User size={40} color={colors.white} />
+              <UserIcon size={40} color={colors.white} />
             </View>
           )}
 
