@@ -70,7 +70,9 @@ export default function ProfileScreen() {
     user.cidade && user.estado
       ? `${user.cidade}, ${user.estado}`
       : 'Curitiba, PR';
-  const imageUrl = user.imagemPerfil || '';
+  const baseUrl = 'http://felipemariano.com.br:8080/ProjetoAthus/';
+  const imageUrl = `${baseUrl}${user.imagemPerfil}`;
+  console.log('imageUrl:', imageUrl);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,13 +80,7 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.profileImage} />
-          ) : (
-            <View style={styles.profileImagePlaceholder}>
-              <UserIcon size={40} color={colors.white} />
-            </View>
-          )}
+          <Image source={{ uri: imageUrl }} style={styles.profileImage} />
 
           <Text style={styles.profileName}>{nome}</Text>
           <Text style={styles.profileEmail}>{email}</Text>
