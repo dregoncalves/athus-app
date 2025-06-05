@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
 import { colors } from '@/constants/colors';
+import { updateUser } from '@/services/userService';
 import {
   User as UserIcon,
   MapPin,
@@ -19,6 +20,7 @@ import {
   CircleHelp as HelpCircle,
   LogOut,
 } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { ProfileMenuItem } from '@/components/ProfileMenuItem';
 import { AuthContext } from '@/context/AuthContext';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -27,6 +29,7 @@ import { useRouter } from 'expo-router';
 export default function ProfileScreen() {
   const { user, loading, logout } = useContext(AuthContext);
   const router = useRouter();
+  const [selectedImage, setSelectedImage] = useState(null);
 
   async function handleLogout() {
     await GoogleSignin.signOut();
@@ -80,7 +83,38 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
-          <Image source={{ uri: imageUrl }} style={styles.profileImage} />
+          <Image
+            source={{ uri: selectedImage || imageUrl }}
+            style={styles.profileImage}
+          />
+
+          <TouchableOpacity
+            style={[styles.editProfileButton, { marginTop: 12 }]}
+            onPress={async () => {
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.7,
+              });
+
+              if (!result.canceled) {
+                const uri = result.assets[0].uri;
+                setSelectedImage(uri);
+
+                try {
+                  await updateUser({ imagemPerfil: uri });
+                  Alert.alert('Sucesso', 'Foto atualizada com sucesso!');
+                  // Se quiser, pode recarregar os dados do usuário aqui
+                } catch (error) {
+                  Alert.alert('Erro', 'Falha ao atualizar a foto.');
+                  console.error('Erro ao atualizar foto:', error);
+                }
+              }
+            }}
+          >
+            <Text style={styles.editProfileButtonText}>Trocar Foto</Text>
+          </TouchableOpacity>
 
           <Text style={styles.profileName}>{nome}</Text>
           <Text style={styles.profileEmail}>{email}</Text>
