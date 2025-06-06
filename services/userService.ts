@@ -10,9 +10,10 @@ export async function updateUser(payload: Partial<User>) {
     if (value !== null && value !== undefined && key !== 'confirmarSenha') {
       if (key === 'imagemPerfil') {
         if (typeof value === 'string' && value.startsWith('file://')) {
+          const filename = value.split('/').pop() || 'profile.jpg';
           formData.append('imagemPerfil', {
             uri: value,
-            name: 'profile.jpg',
+            name: filename,
             type: 'image/jpeg',
           } as any);
         } else {
