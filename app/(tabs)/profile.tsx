@@ -88,33 +88,38 @@ export default function ProfileScreen() {
             style={styles.profileImage}
           />
 
-          <TouchableOpacity
-            style={[styles.editProfileButton, { marginTop: 12 }]}
-            onPress={async () => {
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.7,
-              });
+<TouchableOpacity
+  style={[styles.editProfileButton, { marginTop: 12 }]}
+  onPress={async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
 
-              if (!result.canceled) {
-                const uri = result.assets[0].uri;
-                setSelectedImage(uri);
+    if (!result.canceled) {
+      let uri = result.assets[0].uri;
+      // Garantir que a URI tenha o prefixo file://
+      if (!uri.startsWith('file://')) {
+        uri = 'file://' + uri;
+      }
+      setSelectedImage(uri);
 
-                try {
-                  await updateUser({ imagemPerfil: uri });
-                  Alert.alert('Sucesso', 'Foto atualizada com sucesso!');
-                  // Se quiser, pode recarregar os dados do usuário aqui
-                } catch (error) {
-                  Alert.alert('Erro', 'Falha ao atualizar a foto.');
-                  console.error('Erro ao atualizar foto:', error);
-                }
-              }
-            }}
-          >
-            <Text style={styles.editProfileButtonText}>Trocar Foto</Text>
-          </TouchableOpacity>
+      try {
+        await updateUser({ imagemPerfil: uri });
+        Alert.alert('Sucesso', 'Foto atualizada com sucesso!');
+        // Se quiser, pode recarregar os dados do usuário aqui
+      } catch (error) {
+        Alert.alert('Erro', 'Falha ao atualizar a foto.');
+        console.error('Erro ao atualizar foto:', error);
+      }
+    }
+  }}
+>
+  <Text style={styles.editProfileButtonText}>Trocar Foto</Text>
+</TouchableOpacity>
+
 
           <Text style={styles.profileName}>{nome}</Text>
           <Text style={styles.profileEmail}>{email}</Text>
